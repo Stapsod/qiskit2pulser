@@ -1,0 +1,25 @@
+[project]
+name = "qiskit2pulser"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "ugo.col", email = "ugo.col@epita.fr" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "pulser>=1.9.1",
+    "qiskit>=2.5.2",
+]
+
+[project.scripts]
+qiskit2pulser = "qiskit2pulser:main"
+
+[build-system]
+requires = ["uv_build>=0.12.6,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
