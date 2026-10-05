@@ -19,7 +19,7 @@ build-backend = "hatchling.build"
 packages = ["src/qiskit2pulser", "tests"]
 
 [dependency-groups]
-dev = ["pytest>=9.1.1"]
+dev = ["pytest>=9.1.1", "ruff>=0.14"]
 
 [tool.pytest.ini_options]
 markers = ["init: tests de mise en place"]

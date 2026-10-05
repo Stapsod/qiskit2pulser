@@ -6,8 +6,6 @@ Compilateur de circuits quantiques [Qiskit](https://www.ibm.com/quantum/qiskit) 
 
 Qiskit décrit un circuit en **portes logiques** ; Pulser décrit une **séquence d'impulsions laser** appliquées à des atomes disposés dans un `Register`. Le compilateur fait le pont.
 
-```
-
 ## Installation
 
 Nécessite [uv](https://docs.astral.sh/uv/) et Python ≥ 3.12.
