@@ -2,26 +2,10 @@
 
 Compilateur de circuits quantiques [Qiskit](https://www.ibm.com/quantum/qiskit) vers des séquences d'impulsions [Pulser](https://github.com/pasqal-io/Pulser) pour processeurs à atomes neutres.
 
-> 🚧 Projet personnel en cours de développement — rien n'est encore fonctionnel.
-
 ## Principe
 
-Qiskit décrit un circuit en **portes logiques** ; Pulser décrit une **séquence d'impulsions laser** appliquées à des atomes disposés dans un `Register`. Le compilateur fait le pont :
+Qiskit décrit un circuit en **portes logiques** ; Pulser décrit une **séquence d'impulsions laser** appliquées à des atomes disposés dans un `Register`. Le compilateur fait le pont.
 
-```
-QuantumCircuit (Qiskit)
-   │ 1. transpile vers une base native : {rz, rx/ry, cz}
-   ▼
-Circuit natif
-   │ 2. placement : qubit → position d'atome (contrainte du rayon de blocage Rydberg)
-   │ 3. routage : insertion de SWAP si deux qubits d'une CZ sont trop éloignés
-   ▼
-   │ 4. génération d'impulsions :
-   │    - rz      → phase shift virtuel (aucune impulsion)
-   │    - rx/ry   → impulsion Raman locale (aire θ, phase φ)
-   │    - cz      → séquence Rydberg π – 2π – π (blocage)
-   ▼
-pulser.Sequence  ──► 5. vérification : QutipEmulator vs Statevector Qiskit
 ```
 
 ## Installation
