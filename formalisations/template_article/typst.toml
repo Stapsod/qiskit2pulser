@@ -1,0 +1,7 @@
+[package]
+name = "template_article"
+version = "1.0.0"
+entrypoint = "lib.typ"
+authors = ["Ugo Col ugoteocol@gamil.com"]
+license = "MIT"
+description = "Template for science articles"

@@ -1,0 +1,66 @@
+root := justfile_directory()
+out  := root / "out"
+
+exclude := "template_article"
+
+default:
+    @just --list
+
+build dir:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    found=0
+    while IFS= read -r f; do
+        found=1
+        rel="${f#./}"
+        pdf="{{out}}/${rel%.typ}.pdf"
+        mkdir -p "$(dirname "$pdf")"
+        typst compile --root "{{root}}" "$f" "$pdf"
+        echo "$rel → out/${rel%.typ}.pdf"
+    done < <(find "{{dir}}" -name '*.typ' -not -name '_*' | sort)
+    [ "$found" = 1 ] || { echo "aucun .typ dans {{dir}}/" >&2; exit 1; }
+
+watch file:
+    typst watch --root {{root}} {{file}} {{out}}/$(dirname {{file}})/$(basename {{file}} .typ).pdf
+
+preview file:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    pdf="{{out}}/$(dirname '{{file}}')/$(basename '{{file}}' .typ).pdf"
+    mkdir -p "$(dirname "$pdf")"
+    typst compile --root "{{root}}" "{{file}}" "$pdf"
+    zathura "$pdf" &
+    typst watch --root "{{root}}" "{{file}}" "$pdf"
+
+conventions: (build "conventions")
+
+all:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    n=0
+    while IFS= read -r f; do
+        rel="${f#./}"
+        pdf="{{out}}/${rel%.typ}.pdf"
+        mkdir -p "$(dirname "$pdf")"
+        typst compile --root "{{root}}" "$f" "$pdf"
+        echo "$rel"
+        n=$((n+1))
+    done < <(find . -name '*.typ' \
+                  -not -path './{{exclude}}/*' \
+                  -not -path './.base/*' \
+                  -not -path './out/*' \
+                  -not -path './.git/*' \
+                  -not -name '_*' | sort)
+    echo "— $n document(s) compilé(s) dans out/"
+
+check-template:
+    typst compile --root {{root}} template_article/lib.typ {{out}}/_template_check.pdf
+
+clean:
+    rm -rf {{out}}
+
+fmt:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    command -v typstyle >/dev/null || { echo "typstyle absent — cargo install typstyle" >&2; exit 1; }
+    find . -name '*.typ' -not -path './.git/*' -not -path './out/*' -exec typstyle -i {} +
