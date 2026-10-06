@@ -5,7 +5,10 @@ description = "Add your description here"
 readme = "README.md"
 authors = [{ name = "ugo.col", email = "ugo.col@epita.fr" }]
 requires-python = ">=3.12"
-dependencies = ["pulser>=1.9.1", "qiskit>=2.5.2"]
+dependencies = [
+    "pulser>=1.9.1",
+    "qiskit>=2.5.2",
+]
 
 [project.scripts]
 qiskit2pulser = "qiskit2pulser:main"
