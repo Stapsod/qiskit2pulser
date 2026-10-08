@@ -26,3 +26,7 @@ dev = ["pytest>=9.1.1", "ruff>=0.14"]
 
 [tool.pytest.ini_options]
 markers = ["init: tests de mise en place"]
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
