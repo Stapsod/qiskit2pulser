@@ -1,16 +1,12 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from itertools import count
-
-_gate_X_count = count()
-_gate_Y_count = count()
-_gate_Z_count = count()
+from typing import ClassVar
 
 
 @dataclass
 class Gate(ABC):
-    name: str
-    qubits: set[int] = field(default_factory=set)
+    symbol: ClassVar[str]
+    qubits: list[int] = field(default_factory=list)
     params: list = field(default_factory=list)
 
     @abstractmethod
@@ -18,25 +14,29 @@ class Gate(ABC):
         pass
 
 
-@dataclass
 class Gate_X(Gate):
-    name: str = field(default_factory=lambda: f"X{next(_gate_X_count)}", init=False)
+    symbol = "X"
 
     def convertion(self):
         pass
 
 
-@dataclass
 class Gate_Y(Gate):
-    name: str = field(default_factory=lambda: f"Y{next(_gate_Y_count)}", init=False)
+    symbol = "Y"
 
     def convertion(self):
         pass
 
 
-@dataclass
 class Gate_Z(Gate):
-    name: str = field(default_factory=lambda: f"Z{next(_gate_Z_count)}", init=False)
+    symbol = "Z"
+
+    def convertion(self):
+        pass
+
+
+class Gate_CZ(Gate):
+    symbol = "CZ"
 
     def convertion(self):
         pass

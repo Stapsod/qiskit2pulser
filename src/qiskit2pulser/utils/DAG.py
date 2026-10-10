@@ -1,5 +1,7 @@
 from __future__ import annotations
+from collections import defaultdict
 from dataclasses import dataclass, field
+from itertools import count
 
 from src.qiskit2pulser.utils.Gate import Gate
 
@@ -7,6 +9,7 @@ from src.qiskit2pulser.utils.Gate import Gate
 @dataclass(eq=False)
 class Node:
     gate: Gate
+    name: str
     successors: list[Node] = field(default_factory=list)
 
     def add_successors(self, node: Node):
@@ -19,13 +22,16 @@ class DAG:
     entries: list[Node] = field(default_factory=list)
     last_gate: list[Node | None] = field(init=False)
     first_gate: list[Node | None] = field(init=False)
+    _counters: defaultdict[str, count] = field(
+        default_factory=lambda: defaultdict(count), init=False, repr=False
+    )
 
     def __post_init__(self):
         self.last_gate = [None] * self.num_qubits
         self.first_gate = [None] * self.num_qubits
 
     def add_gate(self, gate: Gate) -> None:
-        node = Node(gate)
+        node = Node(gate, f"{gate.symbol}{next(self._counters[gate.symbol])}")
         pred = set()
         for q in gate.qubits:
             last = self.last_gate[q]
@@ -52,18 +58,18 @@ class DAG:
             act = [e]
             while act != []:
                 node = act.pop(0)
-                if node.gate.name not in gates:
-                    gates.add(node.gate.name)
-                    decl += f'\t{node.gate.name} [label="{node.gate.name}", shape=square];\n'
+                if node.name not in gates:
+                    gates.add(node.name)
+                    decl += f'\t{node.name} [label="{node.name}", shape=square];\n'
                     for succ in node.successors:
                         act.append(succ)
-                        edges += f"\t{node.gate.name} -> {succ.gate.name};\n"
+                        edges += f"\t{node.name} -> {succ.name};\n"
 
         for q in range(self.num_qubits):
             name = f"q{q}"
             decl += f'\t{name} [label="{name}", shape=circle];\n'
             if self.first_gate[q] is not None:
-                edges += f"\t{name} -> {self.first_gate[q].gate.name} [style=dashed];\n"
+                edges += f"\t{name} -> {self.first_gate[q].name} [style=dashed];\n"
 
         res += decl + edges + "}\n"
         return res
