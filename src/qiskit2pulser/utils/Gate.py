@@ -1,40 +1,42 @@
 from abc import ABC, abstractmethod
-from enum import Enum
+from dataclasses import dataclass, field
+from itertools import count
+
+_gate_X_count = count()
+_gate_Y_count = count()
+_gate_Z_count = count()
 
 
+@dataclass
 class Gate(ABC):
-    def __init__(self, name: str, qubits: list, params: list) -> None:
-        self._name = name
-        self._params = params
-        self._qubits = qubits
-
-    def __str__(self) -> str:
-        return f"{self._name}, {self._params}, {self._qubits}\n"
+    name: str
+    qubits: set[int] = field(default_factory=set)
+    params: list = field(default_factory=list)
 
     @abstractmethod
     def convertion(self):
         pass
 
 
+@dataclass
 class Gate_X(Gate):
-    def __init__(self, qubits: list, params: list):
-        super().__init__("X", qubits, params)
+    name: str = field(default_factory=lambda: f"X{next(_gate_X_count)}", init=False)
 
     def convertion(self):
         pass
 
 
+@dataclass
 class Gate_Y(Gate):
-    def __init__(self, qubits: list, params: list):
-        super().__init__("Y", qubits, params)
+    name: str = field(default_factory=lambda: f"Y{next(_gate_Y_count)}", init=False)
 
     def convertion(self):
         pass
 
 
+@dataclass
 class Gate_Z(Gate):
-    def __init__(self, qubits: list, params: list):
-        super().__init__("Z", qubits, params)
+    name: str = field(default_factory=lambda: f"Z{next(_gate_Z_count)}", init=False)
 
     def convertion(self):
         pass
