@@ -9,7 +9,7 @@ def demo_circuit() -> QuantumCircuit:
     qc = QuantumCircuit(3)
     qc.x(0)
     qc.y(1)
-    qc.z(0)
+    qc.cz(0, 1)
     qc.x(2)
     qc.y(0)
     return qc
@@ -39,13 +39,13 @@ def main() -> None:
 
     dag = QC_to_DAG(qc)
     print("=== DAG ===")
-    print("entrées :", [n.gate.name for n in dag.entries])
+    print("entrées :", [n.name for n in dag.entries])
 
     dot = dag.to_dot_string()
     if args.dot_file:
-        with open(args.dot_file, "w") as f:
+        with open(f"out/{args.dot_file}", "w") as f:
             f.write(dot)
-        print(f"DOT écrit dans {args.dot_file}")
+        print(f"DOT écrit dans out/{args.dot_file}")
     elif not args.show:
         print(dot)
 
