@@ -16,8 +16,7 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 
 ## État actuel
 
-<!-- À mettre à jour à chaque réponse : 3 à 5 lignes max, on remplace au lieu d'ajouter. -->
-- Branche `3-convert-quantum-circuit-into-dag` : conversion du circuit Qiskit vers une structure de DAG maison.
-- Dernière revue : les bugs de détail sont corrigés, mais la structure actuelle (un seul `next` par nœud) duplique les portes à plusieurs qubits. L'utilisateur revoit la structure.
-- En attente : la nouvelle version du DAG et un premier test `tests/test_dag.py`.
-- `CLAUDE.md` créé le 2026-10-10, pas encore commité.
+<!-- À mettre à jour à chaque réponse : 3 à 5 lignes max, on remplace au lieu d'ajouter. Pas de « prochaines étapes » : c'est l'utilisateur qui les fixe. -->
+- Branche `3-convert-quantum-circuit-into-dag` : Qiskit → DAG maison fonctionnel (portes X/Y/Z/CZ, successeurs, première et dernière porte par qubit, noms attribués par le DAG).
+- Outillage : `uv run qiskit2pulser [f.dot] [--show]` (circuit de démo → DAG → DOT/PNG), documenté dans le README. La feuille de route du README a été remplacée par un « État d'avancement », sans étapes futures. L'étape Pulser n'existe pas encore.
+- Rien n'est commité depuis `07af239`.

@@ -47,14 +47,7 @@ uv run testsuite -k cz -v     # les arguments sont transmis à pytest
     └── test_*.py        # les tests
 ```
 
-## Feuille de route
+## État d'avancement
 
 - [x] Mise en place de l'environnement et de la suite de tests
-- [ ] Prise en main de Pulser : porte X par impulsion Raman sur un atome
-- [ ] Portes à 1 qubit (`rx`, `ry`, `rz`) vérifiées contre Qiskit
-- [ ] Porte CZ par blocage Rydberg
-- [ ] Frontend Qiskit : transpilation vers la base native et parcours du DAG
-- [ ] Placement des atomes
-- [ ] Routage (insertion de SWAP)
-- [ ] Optimisations (fusion de rotations, parallélisation)
-- [ ] Mode analogique (ex. MIS / QAOA sur l'hamiltonien Rydberg)
+- [x] Conversion d'un circuit Qiskit en DAG (portes `x`, `y`, `z`, `cz`), avec export DOT et affichage via Graphviz
