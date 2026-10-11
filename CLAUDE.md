@@ -11,7 +11,7 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 
 ## Outils
 
-- `uv sync` pour installer, `uv run testsuite` pour lancer les tests (les arguments sont transmis à pytest).
+- `uv sync` pour installer, `uv run testsuite` pour lancer les tests (les arguments sont transmis à pytest). La CI lance `ruff format --check`, `ruff check` et la testsuite.
 - `uv run qiskit2pulser [f.dot] [--show]` : circuit de démo → DAG → DOT/PNG (voir le README).
 - Le code est dans `src/qiskit2pulser/`, les tests dans `tests/`, les notes de conventions (Typst) dans `formalisations/`.
 
@@ -21,4 +21,4 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 - Branche `3-convert-quantum-circuit-into-dag` : DAG maison fonctionnel (X/Y/Z/CZ, successeurs par qubit `dict[int, Node]`, `first_gate`/`last_gate`, `entries`, noms attribués par le DAG). L'étape Pulser n'existe pas encore.
 - Tests : le générateur aléatoire est dans `tests/circuit_generator.py` (0 qubit accepté), et la fixture `checker` est dans `tests/conftest.py` (portée module, `CASES` = 6 cas limites (dont `(1, 2000)`) + 50 tailles tirées par la graine, ids `seedS-qN-gM`). `DAGChecker` est dans `tests/DAG/dag_checker.py`, avec un test par invariant. 168 tests au vert, et le bug volontaire `has_pred` est détecté par `test_entries`.
 - `_get_all_nodes` utilise maintenant une pile explicite (à sa demande) : plus de `RecursionError`, et `(1, 2000)` passe.
-- Pistes évoquées, pas décidées : des prédécesseurs stockés (et un test de cohérence avec les successeurs).
+- 2026-10-11 : tout est commité (`9407930`), et les 3 contrôles de la CI passent en local (lint, format, 168 tests). Piste non décidée : des prédécesseurs stockés.
