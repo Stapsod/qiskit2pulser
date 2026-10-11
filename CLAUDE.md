@@ -1,10 +1,10 @@
 # qiskit2pulser
 
-Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qiskit et produit une `Sequence` Pulser (atomes neutres). D'abord le mode digital (portes → impulsions), le mode analogique viendra plus tard. La feuille de route est dans le README.
+Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qiskit et produit une `Sequence` Pulser (atomes neutres). D'abord le mode digital (portes → impulsions), le mode analogique viendra plus tard.
 
 ## Comment travailler avec l'utilisateur
 
-- On échange en français.
+- On échange en français, mais les commentaires et docstrings du code sont en anglais.
 - Mode mentorat : j'explique les concepts et fixe l'objectif de chaque étape. **L'utilisateur écrit le code essentiel**, puis je relis et je débloque. Pas d'implémentation du cœur à sa place, sauf demande explicite. Le boilerplate et la config, ça va.
 - **Les choix techniques lui appartiennent.** Quand je relis, je juge son approche selon ses propres termes : bugs, cas limites, conséquences. Je ne ramène pas ses choix vers ma solution préférée. Les alternatives se proposent, elles ne s'imposent pas.
 - En revue, toujours exécuter le code (un petit script ou les tests) avant de conclure.
@@ -12,12 +12,13 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 ## Outils
 
 - `uv sync` pour installer, `uv run testsuite` pour lancer les tests (les arguments sont transmis à pytest).
+- `uv run qiskit2pulser [f.dot] [--show]` : circuit de démo → DAG → DOT/PNG (voir le README).
 - Le code est dans `src/qiskit2pulser/`, les tests dans `tests/`, les notes de conventions (Typst) dans `formalisations/`.
 
 ## État actuel
 
 <!-- À mettre à jour à chaque réponse : 3 à 5 lignes max, on remplace au lieu d'ajouter. Pas de « prochaines étapes » : c'est l'utilisateur qui les fixe. -->
-- Branche `3-convert-quantum-circuit-into-dag` : Qiskit → DAG maison fonctionnel (portes X/Y/Z/CZ, successeurs, première et dernière porte par qubit, noms attribués par le DAG).
-- Outillage : `uv run qiskit2pulser [f.dot] [--show]` (circuit de démo → DAG → DOT/PNG), documenté dans le README. La feuille de route du README a été remplacée par un « État d'avancement », sans étapes futures. L'étape Pulser n'existe pas encore.
-- Testsuite du DAG : l'utilisateur a choisi un générateur de circuits aléatoires + des invariants (pas d'oracle Qiskit). Il implémente d'abord le générateur, à partir de mes explications : `random.Random(seed)`, portes tirées de `_gate_types`, arité donnée par `get_standard_gate_name_mapping()`, `rng.sample` pour les qubits, `parametrize` sur les graines.
-- Rien n'est commité depuis `07af239`.
+- Branche `3-convert-quantum-circuit-into-dag` : DAG maison fonctionnel (X/Y/Z/CZ, successeurs par qubit `dict[int, Node]`, `first_gate`/`last_gate`, `entries`, noms attribués par le DAG). L'étape Pulser n'existe pas encore.
+- Tests : le générateur aléatoire est dans `tests/circuit_generator.py` (0 qubit accepté), et la fixture `checker` est dans `tests/conftest.py` (portée module, `CASES` = 6 cas limites (dont `(1, 2000)`) + 50 tailles tirées par la graine, ids `seedS-qN-gM`). `DAGChecker` est dans `tests/DAG/dag_checker.py`, avec un test par invariant. 168 tests au vert, et le bug volontaire `has_pred` est détecté par `test_entries`.
+- `_get_all_nodes` utilise maintenant une pile explicite (à sa demande) : plus de `RecursionError`, et `(1, 2000)` passe.
+- Pistes évoquées, pas décidées : des prédécesseurs stockés (et un test de cohérence avec les successeurs).
