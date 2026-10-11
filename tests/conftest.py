@@ -2,10 +2,11 @@ import pytest
 
 pytest.register_assert_rewrite("tests.DAG.dag_checker")
 
-from src.qiskit2pulser.qiskit_to_dag import _gate_types  # noqa: E402
-from tests.circuit_generator import generate_circuit_and_dag  # noqa: E402
-from tests.DAG.dag_checker import DAGChecker  # noqa: E402
-import random  # noqa: E402
+import random
+
+from src.qiskit2pulser.qiskit_to_dag import _gate_types
+from tests.circuit_generator import generate_circuit_and_dag
+from tests.DAG.dag_checker import DAGChecker
 
 
 def random_case(seed: int) -> tuple[int, int, int]:

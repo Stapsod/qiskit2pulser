@@ -1,13 +1,14 @@
 from qiskit import QuantumCircuit
-from src.qiskit2pulser.utils.Gate import Gate, Gate_CZ, Gate_X, Gate_Y, Gate_Z
+
 from src.qiskit2pulser.utils.DAG import DAG
+from src.qiskit2pulser.utils.Gate import Gate, Gate_CZ, Gate_X, Gate_Y, Gate_Z
 
 _gate_types = {"x": Gate_X, "y": Gate_Y, "z": Gate_Z, "cz": Gate_CZ}
 
 
 def get_gate_type(name: str) -> type[Gate]:
     if name.lower() not in _gate_types:
-        raise Exception(f"get_gate_type: the gate {name} is not supported yet")
+        raise ValueError(f"get_gate_type: the gate {name} is not supported yet")
     return _gate_types[name.lower()]
 
 
