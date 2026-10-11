@@ -20,7 +20,7 @@ def generate_circuit_and_dag(
     filtered_gates = list(
         filter(lambda g: standard_gate_name_mapping[g].num_qubits <= nb_qubits, gates)
     )
-    if filtered_gates == []:
+    if filtered_gates == [] and nb_gates > 0:
         raise ValueError("generate_circuit_and_dag: Filtered Gates set is empty.")
 
     for _ in range(nb_gates):
