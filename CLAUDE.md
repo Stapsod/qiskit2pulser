@@ -19,4 +19,5 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 <!-- À mettre à jour à chaque réponse : 3 à 5 lignes max, on remplace au lieu d'ajouter. Pas de « prochaines étapes » : c'est l'utilisateur qui les fixe. -->
 - Branche `3-convert-quantum-circuit-into-dag` : Qiskit → DAG maison fonctionnel (portes X/Y/Z/CZ, successeurs, première et dernière porte par qubit, noms attribués par le DAG).
 - Outillage : `uv run qiskit2pulser [f.dot] [--show]` (circuit de démo → DAG → DOT/PNG), documenté dans le README. La feuille de route du README a été remplacée par un « État d'avancement », sans étapes futures. L'étape Pulser n'existe pas encore.
+- Testsuite du DAG : l'utilisateur a choisi un générateur de circuits aléatoires + des invariants (pas d'oracle Qiskit). Il implémente d'abord le générateur, à partir de mes explications : `random.Random(seed)`, portes tirées de `_gate_types`, arité donnée par `get_standard_gate_name_mapping()`, `rng.sample` pour les qubits, `parametrize` sur les graines.
 - Rien n'est commité depuis `07af239`.
