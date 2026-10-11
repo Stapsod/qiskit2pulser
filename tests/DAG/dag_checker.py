@@ -40,15 +40,12 @@ class DAGChecker:
 
     def _get_all_nodes(self) -> set[Node]:
         res = set()
-
-        def _aux(n: Node | None):
-            if n is not None and n not in res:
+        stack = list(self.dag.entries)
+        while stack:
+            n = stack.pop()
+            if n not in res:
                 res.add(n)
-                for s in n.successors.values():
-                    _aux(s)
-
-        for n in self.dag.entries:
-            _aux(n)
+                stack.extend(n.successors.values())
 
         return res
 
