@@ -10,7 +10,7 @@ from src.qiskit2pulser.utils.Gate import Gate
 class Node:
     gate: Gate
     name: str
-    successors: list[Node] = field(default_factory=list)
+    successors: list[Node] = field(default_factory=list, repr=False)
 
     def add_successors(self, node: Node):
         self.successors.append(node)
