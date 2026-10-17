@@ -7,6 +7,7 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 - On échange en français, mais les commentaires et docstrings du code sont en anglais.
 - Mode mentorat : j'explique les concepts et fixe l'objectif de chaque étape. **L'utilisateur écrit le code essentiel**, puis je relis et je débloque. Pas d'implémentation du cœur à sa place, sauf demande explicite. Le boilerplate et la config, ça va.
 - **Les choix techniques lui appartiennent.** Quand je relis, je juge son approche selon ses propres termes : bugs, cas limites, conséquences. Je ne ramène pas ses choix vers ma solution préférée. Les alternatives se proposent, elles ne s'imposent pas.
+- Placement des atomes : aucune piste d'implémentation de ma part, sauf demande explicite (règle qu'il a posée le 2026-10-12).
 - En revue, toujours exécuter le code (un petit script ou les tests) avant de conclure.
 
 ## Outils
@@ -15,10 +16,28 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 - `uv run qiskit2pulser [f.dot] [--show]` : circuit de démo → DAG → DOT/PNG (voir le README).
 - Le code est dans `src/qiskit2pulser/`, les tests dans `tests/`, les notes de conventions (Typst) dans `formalisations/`.
 
-## État actuel
+## Historique
 
-<!-- À mettre à jour à chaque réponse : 3 à 5 lignes max, on remplace au lieu d'ajouter. Pas de « prochaines étapes » : c'est l'utilisateur qui les fixe. -->
-- Branche `3-convert-quantum-circuit-into-dag` : DAG maison fonctionnel (X/Y/Z/CZ, successeurs par qubit `dict[int, Node]`, `first_gate`/`last_gate`, `entries`, noms attribués par le DAG). L'étape Pulser n'existe pas encore.
-- Tests : le générateur aléatoire est dans `tests/circuit_generator.py` (0 qubit accepté), et la fixture `checker` est dans `tests/conftest.py` (portée module, `CASES` = 6 cas limites (dont `(1, 2000)`) + 50 tailles tirées par la graine, ids `seedS-qN-gM`). `DAGChecker` est dans `tests/DAG/dag_checker.py`, avec un test par invariant. 168 tests au vert, et le bug volontaire `has_pred` est détecté par `test_entries`.
-- `_get_all_nodes` utilise maintenant une pile explicite (à sa demande) : plus de `RecursionError`, et `(1, 2000)` passe.
-- 2026-10-11 : tout est commité (`9407930`), et les 3 contrôles de la CI passent en local (lint, format, 168 tests). Piste non décidée : des prédécesseurs stockés.
+<!-- Une entrée par jour de travail, la plus récente en bas. Chaque entrée fait 3 à 5 lignes : ce qui a été fait, décidé ou laissé ouvert. Le jour même, on réécrit l'entrée au lieu d'ajouter des lignes. On ne touche pas aux jours passés. Pas de « prochaines étapes » : c'est l'utilisateur qui les fixe. -->
+
+### 2026-10-08
+- Démarrage : notebook d'essai Qiskit, premières classes `Gate` et `DAG` (simple liste au départ), début du convertisseur.
+
+### 2026-10-10
+- Une classe par porte (dataclass), `add_gate` et export DOT, ajout de la CZ.
+- `main` de démo (circuit → DAG → DOT/PNG), sorties dans `out/`.
+
+### 2026-10-11
+- Successeurs stockés dans un dict par qubit. Testsuite : générateur aléatoire de circuits, `DAGChecker` (parcours non récursif), conftest et cas limites codés en dur.
+- CI de lint. 168 tests au vert sur `5-create-a-testsuite-for-the-dags`, pas encore mergée dans `main`. Idée non tranchée : stocker aussi les prédécesseurs.
+
+### 2026-10-12 (et séances suivantes, dates non notées)
+- Il attaque le placement des atomes avant les impulsions. Contraintes `DigitalAnalogDevice` : 2D, distance min 4 µm, rayon 50 µm, 100 atomes, R_b ≈ 6,6 µm à Ω max.
+- Ses choix : CZ sérialisées (invariant à respecter dans la `Sequence`), solveur SAT, grille de pas ≈ 2 µm (P ≈ 2000), x[q][p], couronne CZ ¬x[a][p] ∨ ⋁_{N(p)} x[b][p'] (4 µm ≤ d ≤ seuil), UNSAT ⇒ routage.
+- Distance min : il est passé de ≈ 128 M de clauses par paire de qubits à o[p] = « p occupé » (liaison x → o, ¬o[p] ∨ ¬o[p'] pour p ≠ p').
+- Cassage de symétrie (fixer un qubit) : gain jugé faible. Qubits « pivots » : idée mise de côté.
+
+### 2026-10-17
+- Comptage : ≈ 192 M de clauses, presque toutes venant du « au plus un emplacement par qubit » encodé par paires. Trou repéré : rien n'empêchait deux qubits sur le même p.
+- Sa piste y[q] (« placé quelque part ») ne marche pas : un OU ne compte pas. À sa demande, je lui ai donné le compteur séquentiel (Sinz) pour les deux « au plus un » (≈ 1,4 M + m·P au total).
+- Rien n'est codé. Restent ouverts : pourquoi s → (s_prev ∨ x) est inutile, et l'exercice papier (ligne de 4 emplacements).
