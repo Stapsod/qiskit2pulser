@@ -18,7 +18,7 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 
 ## Historique
 
-<!-- Une entrée par jour de travail, la plus récente en bas. Chaque entrée fait 3 à 5 lignes : ce qui a été fait, décidé ou laissé ouvert. Le jour même, on réécrit l'entrée au lieu d'ajouter des lignes. On ne touche pas aux jours passés. Pas de « prochaines étapes » : c'est l'utilisateur qui les fixe. -->
+<!-- Une entrée par jour de travail, la plus récente en bas. Chaque entrée dit ce qui a été fait, décidé ou laissé ouvert. Rester bref et garder le fichier lisible, sans jamais perdre d'information utile. Le jour même, on complète l'entrée. On ne touche pas aux jours passés. Pas de « prochaines étapes » : c'est l'utilisateur qui les fixe. -->
 
 ### 2026-10-08
 - Démarrage : notebook d'essai Qiskit, premières classes `Gate` et `DAG` (simple liste au départ), début du convertisseur.
@@ -40,4 +40,6 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 ### 2026-10-17
 - Comptage : ≈ 192 M de clauses, presque toutes venant du « au plus un emplacement par qubit » encodé par paires. Trou repéré : rien n'empêchait deux qubits sur le même p.
 - Sa piste y[q] (« placé quelque part ») ne marche pas : un OU ne compte pas. À sa demande, je lui ai donné le compteur séquentiel (Sinz) pour les deux « au plus un » (≈ 1,4 M + m·P au total).
-- Rien n'est codé. Restent ouverts : pourquoi s → (s_prev ∨ x) est inutile, et l'exercice papier (ligne de 4 emplacements).
+- Son idée : retirer o, car le compteur t le rend redondant. Piège signalé : t[p][n−2] ne couvre pas le dernier qubit. Son correctif : une colonne t[p][n−1] = « p occupé », qui remplace o[p] et rend la liaison x → o inutile (total ≈ 1,18 M + m·P).
+- Exercice papier fait : UNSAT par manque de place, même sans CZ. Sa règle « UNSAT ⇒ routage » ne tient donc pas en général.
+- Son choix : des tests préliminaires avant le SAT, dont un placement trivial sans tenir compte des CZ. S'il passe, la géométrie est faisable et un UNSAT vient des CZ (donc routage). Restent ouverts : que faire s'il échoue, quel placement trivial choisir, pourquoi les implications dans un seul sens suffisent. Rien n'est codé.
