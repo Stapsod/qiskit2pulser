@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from collections import defaultdict
 from dataclasses import dataclass, field
 from itertools import count
@@ -10,10 +11,10 @@ from src.qiskit2pulser.utils.Gate import Gate
 class Node:
     gate: Gate
     name: str
-    successors: list[Node] = field(default_factory=list)
+    successors: dict[int, Node] = field(default_factory=dict, repr=False)
 
-    def add_successors(self, node: Node):
-        self.successors.append(node)
+    def add_successors(self, node: Node, q: int):
+        self.successors[q] = node
 
 
 @dataclass
@@ -32,19 +33,18 @@ class DAG:
 
     def add_gate(self, gate: Gate) -> None:
         node = Node(gate, f"{gate.symbol}{next(self._counters[gate.symbol])}")
-        pred = set()
+        has_pred = False
         for q in gate.qubits:
             last = self.last_gate[q]
             if last is not None:
-                pred.add(last)
+                last.add_successors(node, q)
+                has_pred = True
             else:
                 self.first_gate[q] = node
 
-        if not pred:
+        if not has_pred:
             self.entries.append(node)
 
-        for p in pred:
-            p.add_successors(node)
         for q in gate.qubits:
             self.last_gate[q] = node
 
@@ -61,7 +61,7 @@ class DAG:
                 if node.name not in gates:
                     gates.add(node.name)
                     decl += f'\t{node.name} [label="{node.name}", shape=square];\n'
-                    for succ in node.successors:
+                    for succ in node.successors.values():
                         act.append(succ)
                         edges += f"\t{node.name} -> {succ.name};\n"
 

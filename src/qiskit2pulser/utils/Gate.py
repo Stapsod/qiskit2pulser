@@ -15,28 +15,28 @@ class Gate(ABC):
 
 
 class Gate_X(Gate):
-    symbol = "X"
+    symbol = "x"
 
     def convertion(self):
         pass
 
 
 class Gate_Y(Gate):
-    symbol = "Y"
+    symbol = "y"
 
     def convertion(self):
         pass
 
 
 class Gate_Z(Gate):
-    symbol = "Z"
+    symbol = "z"
 
     def convertion(self):
         pass
 
 
 class Gate_CZ(Gate):
-    symbol = "CZ"
+    symbol = "cz"
 
     def convertion(self):
         pass

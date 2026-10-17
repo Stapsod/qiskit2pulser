@@ -16,8 +16,8 @@ def demo_circuit() -> QuantumCircuit:
 
 
 def show_dot(dot: str) -> None:
-    """Rend le DOT en PNG avec Graphviz et l'ouvre avec le visionneur par défaut."""
-    png = tempfile.NamedTemporaryFile(prefix="dag_", suffix=".png", delete=False).name
+    with tempfile.NamedTemporaryFile(prefix="dag_", suffix=".png", delete=False) as f:
+        png = f.name
     subprocess.run(["dot", "-Tpng", "-o", png], input=dot, text=True, check=True)
     subprocess.Popen(["feh", png])
     print(f"Graphe ouvert : {png}")
