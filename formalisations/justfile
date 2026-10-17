@@ -34,6 +34,8 @@ preview file:
 
 conventions: (build "conventions")
 
+SAT_clauses: (build "SAT/clauses")
+
 all:
     #!/usr/bin/env bash
     set -euo pipefail

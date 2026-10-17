@@ -37,11 +37,23 @@ uv run testsuite              # lance toute la suite
 uv run testsuite -k cz -v     # les arguments sont transmis à pytest
 ```
 
+## Notes de formalisation
+
+Les notes (Typst) sont dans `formalisations/` et se compilent avec [just](https://github.com/casey/just) et [Typst](https://typst.app/). Les PDF sont écrits dans `formalisations/out/`.
+
+```bash
+cd formalisations
+just conventions    # conventions Qiskit ↔ Pulser mesurées dans l'émulateur
+just SAT_clauses    # encodage SAT du placement des atomes
+just all            # tous les documents
+```
+
 ## Structure
 
 ```
 .
 ├── src/qiskit2pulser/   # le compilateur
+├── formalisations/      # notes Typst (conventions, SAT/clauses)
 └── tests/
     ├── testsuite.py     # point d'entrée de `uv run testsuite`
     └── test_*.py        # les tests
@@ -51,3 +63,4 @@ uv run testsuite -k cz -v     # les arguments sont transmis à pytest
 
 - [x] Mise en place de l'environnement et de la suite de tests
 - [x] Conversion d'un circuit Qiskit en DAG (portes `x`, `y`, `z`, `cz`), avec export DOT et affichage via Graphviz
+- [ ] Placement des atomes par SAT : en conception (voir `formalisations/SAT/clauses/`)
