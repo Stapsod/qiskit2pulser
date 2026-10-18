@@ -36,6 +36,8 @@ conventions: (build "conventions")
 
 SAT_clauses: (build "SAT/clauses")
 
+SAT_alternatives: (build "SAT/alternatives")
+
 all:
     #!/usr/bin/env bash
     set -euo pipefail
