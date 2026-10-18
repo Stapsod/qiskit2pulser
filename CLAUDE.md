@@ -65,3 +65,4 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 
   Ω vaut pour tout le compilateur, impulsions CZ comprises. Il prévoit un fichier de config.
 - `RegisterLayout` : Pulser impose 4 µm entre les pièges, donc un layout au pas de 2 µm est refusé. Le gain en clauses vient du pas (au pas de 4 : plus de famille 4, ≈ 10× moins de littéraux pour la famille 5, mais un degré CZ max de 8). Pas encore tranché, le paramètre « pas » couvre les deux cas.
+- Code : il a lancé `PulserParameters` (`utils/pulser_parameters.py`) et la classe mère `Solver` (`SAT/utils/solver.py`). À sa demande, j'ai complété `PulserParameters` : les constantes sont lues dans le device, omega/step/threshold viennent de la section `[pulser]` de `config.toml` (threshold vaut R_b par défaut), et la cohérence est vérifiée.
