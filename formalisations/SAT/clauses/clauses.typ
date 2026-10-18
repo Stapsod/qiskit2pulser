@@ -9,7 +9,7 @@
     Ce document formalise l'encodage SAT utilisé pour placer les qubits d'un
     circuit sur le `DigitalAnalogDevice` : hypothèses, variables, familles
     de clauses et nombre de clauses. Il fixe l'état des
-    décisions au 2026-10-17. Rien n'est encore implémenté.
+    décisions au 2026-10-18. Rien n'est encore implémenté.
   ],
   keywords: ("Pulser", "SAT", "placement"),
 )
@@ -63,8 +63,8 @@
 )
 
 Les variables $s$ et $t$ sont auxiliaires. Elles ne sont contraintes que dans
-un sens (la variable est vraie *au moins* quand son sens l'exige). La justification
-reste une question ouverte (@ouvert).
+un sens (la variable est vraie *au moins* quand son sens l'exige). La
+justification est donnée en @sens-unique.
 
 = Clauses
 
@@ -77,8 +77,8 @@ $ x_(q,0) or x_(q,1) or dots or x_(q,P-1) $
 
 Compteur séquentiel (Sinz, 2005) sur la ligne $q$ de $x$ :
 $
-  & not x_(q,k) or s_(q,k) & quad & k = 0, ..., P-2 \
-  & not s_(q,k-1) or s_(q,k) & quad & k = 1, ..., P-2 \
+  & not x_(q,k) or s_(q,k)       & quad & k = 0, ..., P-2 \
+  & not s_(q,k-1) or s_(q,k)     & quad & k = 1, ..., P-2 \
   & not s_(q,k-1) or not x_(q,k) & quad & k = 1, ..., P-1
 $
 La dernière ligne interdit un deuxième emplacement : si $q$ est déjà placé
@@ -89,8 +89,8 @@ avant $k$, il ne peut pas être sur $k$.
 Le même compteur sur la colonne $p$ de $x$, prolongé d'un cran pour que
 $t_(p,n-1)$ couvre tous les qubits :
 $
-  & not x_(j,p) or t_(p,j) & quad & j = 0, ..., n-1 \
-  & not t_(p,j-1) or t_(p,j) & quad & j = 1, ..., n-1 \
+  & not x_(j,p) or t_(p,j)       & quad & j = 0, ..., n-1 \
+  & not t_(p,j-1) or t_(p,j)     & quad & j = 1, ..., n-1 \
   & not t_(p,j-1) or not x_(j,p) & quad & j = 1, ..., n-1
 $
 
@@ -122,17 +122,85 @@ $ not x_(a,p) or or.big_(p' in N(p)) x_(b,p') $
 Si $N(p) = emptyset$, la clause se réduit à $not x_(a,p)$. Une seule
 direction suffit, car la couronne est symétrique.
 
+= Pourquoi un seul sens suffit <sens-unique>
+
+Les clauses imposent $x_(q,k) => s_(q,k)$ et $s_(q,k-1) => s_(q,k)$, mais
+pas la réciproque $s_(q,k) => s_(q,k-1) or x_(q,k)$. Le solveur peut donc
+mettre $s_(q,k)$ à vrai sans que $q$ soit placé sur l'un des emplacements
+$0, ..., k$. Il en va de même pour $t$. Cela ne change pas la réponse du
+solveur.
+
+#theorem(title: "Équisatisfiabilité")[
+  Soit $F$ l'ensemble des clauses des familles 1 à 5.
+  + Dans tout modèle de $F$, les variables $x$ décrivent un placement valide.
+  + Tout placement valide se prolonge en un modèle de $F$.
+]
+
+#proof[
+  *1. Pas de faux SAT.* On prend un modèle de $F$.
+  - Si $x_(q,i)$ et $x_(q,j)$ sont vrais avec $i < j$, alors $s_(q,i)$ est
+    vrai, puis $s_(q,j-1)$ par la chaîne, et la clause
+    $not s_(q,j-1) or not x_(q,j)$ est violée.
+  - Si $x_(i,p)$ et $x_(j,p)$ sont vrais avec $i < j$, le même raisonnement
+    sur la colonne $p$ viole $not t_(p,j-1) or not x_(j,p)$.
+  - Si deux emplacements ${p, p'} in D$ sont occupés, la chaîne force
+    $t_(p,n-1)$ et $t_(p',n-1)$ à vrai, et la clause de distance est violée.
+  - Les familles 1 et 5 ne portent que sur $x$ : elles valent directement
+    pour le placement.
+
+  L'argument n'utilise que les implications présentes : il suffit que $s$
+  et $t$ soient vraies quand $x$ l'impose, jamais qu'elles soient fausses.
+
+  *2. Pas de faux UNSAT.* On part d'un placement valide et on donne aux
+  auxiliaires leur valeur « honnête » :
+  $
+    s_(q,k) = or.big_(k' <= k) x_(q,k') quad quad
+    t_(p,j) = or.big_(j' <= j) x_(j',p)
+  $
+  Les implications sont vraies par construction. La clause
+  $not s_(q,k-1) or not x_(q,k)$ dit que $q$ n'est pas à la fois avant $k$
+  et sur $k$ : c'est le cas, car $q$ n'a qu'un emplacement. Même chose pour
+  $t$. Comme $t_(p,n-1)$ vaut exactement « $p$ est occupé », la distance
+  minimale du placement donne la famille 4. Les familles 1 et 5 sont vraies
+  par hypothèse.
+]
+
+#remark[
+  *Ce qui rend l'argument possible.* En dehors de leur propre chaîne, $s$ et
+  $t$ n'apparaissent qu'en négatif ($not s or not x$, $not t or not x$,
+  $not t or not t$). Une auxiliaire mise à vrai à tort ne peut donc
+  qu'interdire des placements, jamais en autoriser. Deux conséquences :
+  - Un modèle peut contenir des valeurs de $s$ ou $t$ qui ne correspondent à
+    rien. Le placement se lit sur $x$ seul.
+  - Si une clause utilisait un jour $t$ en positif, par exemple
+    $not x_(a,p) or or.big_(p' in N(p)) t_(p',n-1)$, le point 1 tomberait :
+    le solveur pourrait la satisfaire en mettant $t_(p',n-1)$ à vrai sans
+    aucun qubit en $p'$. Il faudrait alors ajouter la réciproque.
+]
+
 = Nombre de clauses
 
 #single_column_table(
   headers: ([Famille], [Formule], [$n = 100$, $P = 1961$]),
   content: (
-    [1. Au moins un], [$n$], [100],
-    [2. Au plus un emplacement], [$n (3P - 4)$], [587 900],
-    [3. Au plus un qubit, occupation], [$P (3n - 2)$], [584 378],
-    [4. Distance min], [$|D| approx 8P \/ 2$], [7 600],
-    [5. Couronne CZ], [$m P$], [$<= 9.7$ M ($m <= 4950$)],
-    [*Total*], [], [$approx 1.18$ M $+ m P$],
+    [1. Au moins un],
+    [$n$],
+    [100],
+    [2. Au plus un emplacement],
+    [$n (3P - 4)$],
+    [587 900],
+    [3. Au plus un qubit, occupation],
+    [$P (3n - 2)$],
+    [584 378],
+    [4. Distance min],
+    [$|D| approx 8P \/ 2$],
+    [7 600],
+    [5. Couronne CZ],
+    [$m P$],
+    [$<= 9.7$ M ($m <= 4950$)],
+    [*Total*],
+    [],
+    [$approx 1.18$ M $+ m P$],
   ),
   false,
   none,
@@ -145,8 +213,6 @@ $P n (n-1) \/ 2 approx 9.7$ M pour la famille 3. La distance minimale
 
 = Questions ouvertes <ouvert>
 
-- Pourquoi les implications de $s$ et $t$ dans un seul sens suffisent (pas
-  de clause $s_(q,k) => s_(q,k-1) or x_(q,k)$).
 - La valeur du seuil de la couronne.
 - Le cassage de symétrie (fixer un qubit) : gain jugé faible. Les qubits
   « pivots » : idée mise de côté.
