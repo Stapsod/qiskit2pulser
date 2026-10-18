@@ -46,17 +46,22 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 - Le formalisme complet (variables, clauses, comptage, questions ouvertes) est rédigé dans `formalisations/SAT/clauses/clauses.typ`.
 
 ### 2026-10-18
-- Tests préliminaires (placement trivial, que faire s'il échoue) : reportés à plus tard à sa demande. Priorité aux clauses.
-- Implications à sens unique : son raisonnement (s et t servent à propager, le solveur essaie autre chose si une valeur est fausse), que j'ai complété par l'argument logique. Pas de faux SAT, car hors de leur chaîne, s et t n'apparaissent qu'en négatif : un s ou t mis à vrai à tort ne peut qu'interdire. Pas de faux UNSAT, car le s/t « honnête » calculé depuis x satisfait tout. Ça ne tient que tant qu'aucune clause n'utilise t en positif. Question ouverte résolue et rédigée à sa demande dans `clauses.typ` (section « Pourquoi un seul sens suffit »).
-- Seuil de la couronne = distance max pour que le blocage fonctionne, donc ≤ R_b(Ω). Son choix : Ω et le seuil sont deux paramètres variables.
-- Analyse neutre du formalisme à sa demande. La logique est juste. Points soulevés :
-  - cohérence Pulser : `from_coordinates` recentre par défaut, et le rayon de 50 µm est testé sans tolérance ;
-  - hypothèse non écrite : CZ via `rydberg_local` ;
-  - toutes les distances de la couronne se valent (fidélité) ;
-  - grille ≠ continu ;
-  - placement en tout-ou-rien, et rien sur le problème après routage ;
-  - nombre de littéraux de la famille 5, et m ≤ 4950 irréaliste ;
-  - symétries sur les instances UNSAT ;
-  - doc pas à jour sur Ω/seuil.
-- Il demande ce qui bloque le dev. Mon avis : l'idée tient, sans bloquant de fond pour le module SAT. Deux décisions restent à écrire : le repère du disque face au recentrage du `Register`, et l'hypothèse CZ via `rydberg_local`. Le vrai trou est global : le comportement après un UNSAT (routage), qu'il assume de reporter ou non.
-- Il demande s'il y a mieux que le SAT. Pistes présentées à sa demande : MaxSAT (CZ en clauses souples), ILP/CP-SAT (objectif, cardinalités natives), heuristiques (greedy, force-directed). Mon avis : pas de « meilleur » absolu, le SAT tient pour son objectif. Sa faiblesse est le tout-ou-rien. Rien n'est tranché. À sa demande, c'est consigné dans `formalisations/SAT/alternatives/alternatives.typ` (recette `just SAT_alternatives`), au cas où le SAT ne serait pas intéressant.
+- Formalisme : la justification des implications à sens unique de s et t (équisatisfiabilité) est rédigée dans `clauses.typ`. Ω et le seuil deviennent des paramètres.
+- Analyse neutre du formalisme. La logique est juste. Les points qui comptent pour Pulser :
+  - le disque est relatif à l'origine du `Register` (`from_coordinates` recentre, mais pas `Register(dict)`) ;
+  - les CZ passent par `rydberg_local`, ce qui justifie l'absence de contraintes sur les spectateurs.
+- Alternatives au SAT (MaxSAT, ILP/CP-SAT, heuristiques) consignées dans `formalisations/SAT/alternatives/alternatives.typ`. Le SAT reste la piste suivie.
+- Reportés : les tests préliminaires et tout ce qui touche à l'UNSAT et au routage. Une phase d'optimisation du circuit est prévue avant le DAG.
+- Début du dev, son archi :
+  - un main enchaîne circuit → DAG → paramètres → SAT → `Register` ;
+  - l'encodage ne voit que des paramètres (repère abstrait) ;
+  - les clauses sont envoyées au fil de l'eau ;
+  - une classe mère abstraite pour le solveur, avec une sous-classe par solveur.
+- Paramètres, en quatre catégories :
+  - constantes du device, lues dans Pulser ;
+  - choix de config (Ω, pas, marge du seuil) ;
+  - valeurs dérivées (R_b(Ω) → seuil → P, D, N(p)) ;
+  - valeurs qui dépendent du circuit (n, C).
+
+  Ω vaut pour tout le compilateur, impulsions CZ comprises. Il prévoit un fichier de config.
+- `RegisterLayout` : Pulser impose 4 µm entre les pièges, donc un layout au pas de 2 µm est refusé. Le gain en clauses vient du pas (au pas de 4 : plus de famille 4, ≈ 10× moins de littéraux pour la famille 5, mais un degré CZ max de 8). Pas encore tranché, le paramètre « pas » couvre les deux cas.
