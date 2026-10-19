@@ -1,6 +1,6 @@
 import numpy as np
 
-from src.qiskit2pulser.utils.pulser_parameters import PulserParameters
+from src.qiskit2pulser.parameters.pulser_parameters import PulserParameters
 
 
 class RegisterParameters:
