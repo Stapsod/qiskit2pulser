@@ -9,6 +9,7 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 - **Les choix techniques lui appartiennent.** Quand je relis, je juge son approche selon ses propres termes : bugs, cas limites, conséquences. Je ne ramène pas ses choix vers ma solution préférée. Les alternatives se proposent, elles ne s'imposent pas.
 - Placement des atomes : aucune piste d'implémentation de ma part, sauf demande explicite (règle qu'il a posée le 2026-10-12).
 - En revue, toujours exécuter le code (un petit script ou les tests) avant de conclure.
+- **Je tiens l'entrée du jour de l'Historique à jour moi-même, dès qu'un choix est pris ou qu'une piste est ouverte ou écartée, sans attendre qu'il le demande.** Quelques puces courtes et techniques : choix, pistes gardées pour plus tard, pistes explorées, questions ouvertes. Pas de récit de séance.
 
 ## Outils
 
@@ -66,3 +67,13 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
   Ω vaut pour tout le compilateur, impulsions CZ comprises. Il prévoit un fichier de config.
 - `RegisterLayout` : Pulser impose 4 µm entre les pièges, donc un layout au pas de 2 µm est refusé. Le gain en clauses vient du pas (au pas de 4 : plus de famille 4, ≈ 10× moins de littéraux pour la famille 5, mais un degré CZ max de 8). Pas encore tranché, le paramètre « pas » couvre les deux cas.
 - Code : il a lancé `PulserParameters` (`utils/pulser_parameters.py`) et la classe mère `Solver` (`SAT/utils/solver.py`). À sa demande, j'ai complété `PulserParameters` : les constantes sont lues dans le device, omega/step/threshold viennent de la section `[pulser]` de `config.toml` (threshold vaut R_b par défaut), et la cohérence est vérifiée.
+
+### 2026-10-19
+- Solveur en boîte noire : le `main` donne paramètres Pulser + infos du circuit, récupère un arrangement. Classe mère abstraite gardée, une seule sous-classe PySAT (CaDiCaL visé). On reste sur SAT, alternatives plus tard.
+- Numérotation : les x occupent les n·P premiers entiers (formule inversible, rien à stocker), auxiliaires ensuite, non décodées.
+- Grille : carrée, centrée sur l'origine, coupée au disque avec le test de Pulser (`norm <= max_radial_distance`). Pas de 2 : P = 1961, pas de 4 : P = 489.
+- La grille devient une abstraction du registre (`Layout`, dans `layout/`) qui portera de la logique métier, plutôt qu'une classe de paramètres. Nom retenu : `Layout`, malgré `qiskit.transpiler.Layout`.
+- Archi par étape : `DAG/`, `parameters/`, `solvers/`, `layout/`.
+- `Layout` porte toute la logique géométrique (distance, trop proche, à portée de CZ…) ; le solveur s'en sert pour D et N(p).
+- Géométrie sans P² paires : choix du motif de décalages (stencil), qui exploite la régularité de la grille. Voisinages précalculés à l'init. KD-tree (`cKDTree`) gardé en réserve si la grille cesse d'être régulière.
+- Ouvert : `nb_qubits` dans `SolverParameters` mais `cz` en argument d'`encode`.
