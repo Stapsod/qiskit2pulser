@@ -71,9 +71,9 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 ### 2026-10-19
 - Solveur en boîte noire : le `main` donne paramètres Pulser + infos du circuit, récupère un arrangement. Classe mère abstraite gardée, une seule sous-classe PySAT (CaDiCaL visé). On reste sur SAT, alternatives plus tard.
 - Numérotation : les x occupent les n·P premiers entiers (formule inversible, rien à stocker), auxiliaires ensuite, non décodées.
-- Grille : carrée, centrée sur l'origine, coupée au disque avec le test de Pulser (`norm <= max_radial_distance`). Pas de 2 : P = 1961, pas de 4 : P = 489.
+- Grille : carrée, centrée sur l'origine, coupée au disque (distance à l'origine ≤ `max_radial_distance`, comme Pulser). Pas de 2 : P = 1961, pas de 4 : P = 489.
 - La grille devient une abstraction du registre (`Layout`, dans `layout/`) qui portera de la logique métier, plutôt qu'une classe de paramètres. Nom retenu : `Layout`, malgré `qiskit.transpiler.Layout`.
 - Archi par étape : `DAG/`, `parameters/`, `solvers/`, `layout/`.
-- `Layout` porte toute la logique géométrique (distance, trop proche, à portée de CZ…) ; le solveur s'en sert pour D et N(p).
+- `Layout` porte toute la logique géométrique (distance, trop proche si d < `min_dist`, à portée de CZ si `min_dist` ≤ d ≤ `threshold` de la config) ; le solveur s'en sert pour D et N(p).
 - Géométrie sans P² paires : choix du motif de décalages (stencil), qui exploite la régularité de la grille. Voisinages précalculés à l'init. KD-tree (`cKDTree`) gardé en réserve si la grille cesse d'être régulière.
 - Ouvert : `nb_qubits` dans `SolverParameters` mais `cz` en argument d'`encode`.
