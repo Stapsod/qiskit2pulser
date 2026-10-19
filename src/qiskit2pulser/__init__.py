@@ -31,7 +31,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    from src.qiskit2pulser.qiskit_to_dag import QC_to_DAG
+    from src.qiskit2pulser.DAG.qiskit_to_dag import QC_to_DAG
 
     qc = demo_circuit()
     print("=== Circuit Qiskit ===")
