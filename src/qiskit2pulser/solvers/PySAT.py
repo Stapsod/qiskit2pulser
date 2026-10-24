@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+
 import pysat.solvers as pysat_solvers
 
 from qiskit2pulser.DAG.DAG import Node
