@@ -32,6 +32,10 @@ def main() -> None:
     args = parser.parse_args()
 
     from src.qiskit2pulser.DAG.qiskit_to_dag import QC_to_DAG
+    from src.qiskit2pulser.layout.layout import Layout
+    from src.qiskit2pulser.parameters.pulser_parameters import PulserParameters
+    from src.qiskit2pulser.parameters.solver_parameters import SolverParameters
+    from src.qiskit2pulser.solvers.PySAT import PySAT
 
     qc = demo_circuit()
     print("=== Circuit Qiskit ===")
@@ -46,8 +50,12 @@ def main() -> None:
         with open(f"out/{args.dot_file}", "w") as f:
             f.write(dot)
         print(f"DOT écrit dans out/{args.dot_file}")
-    elif not args.show:
-        print(dot)
 
     if args.show:
         show_dot(dot)
+
+    pulser_parameters = PulserParameters("config.toml")
+    solver_parameters = SolverParameters(pulser_parameters, qc.num_qubits)
+    layout = Layout(pulser_parameters)
+    with PySAT(solver_parameters, layout, dag) as solver:
+        print(solver.solve())
