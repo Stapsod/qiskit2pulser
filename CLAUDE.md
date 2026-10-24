@@ -84,5 +84,10 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 - Extraction des CZ : le DFS récursif dans `PySAT.__post_init__` est juste, mais lève `RecursionError` dès ≈ 1000 portes sur un chemin. Son choix : un BFS générique dans `DAG`, avec une fonction passée en paramètre.
 - Point à garder en tête : un BFS depuis les entrées ne garantit pas l'ordre topologique (cf. l'idée des prédécesseurs du 11).
 - Test préliminaire, sa variante : lancer le SAT sans la famille 5 (CZ). Point relevé : avec n ≤ 100 et un pas ≤ 4 µm, la grille contient toujours une sous-grille de pas ≥ 4 µm d'au moins 100 points (489 au pas de 2), donc ce test est toujours SAT et se réduit à vérifier n ≤ `max_atoms`. Pas tranché.
+- Numérotation : retour aux décalages sans stockage (choix du 19). x, s, t contigus à partir de 1. t est indexé (p, j) avec un pas de n.
+- Clauses 1 à 5 implémentées dans `PySAT` en suivant `clauses.typ`. Vérifiées par force brute sur de petites instances et sur la vraie grille (P = 1961).
+- Cycle de vie du solveur : `with`. `Solver.__enter__` appelle `_enter` (construction des variables et des clauses), et nettoie lui-même en cas d'échec, puisque `__exit__` n'est pas appelé dans ce cas. `_delete` accepte `solver is None`.
+- Interface de `Solver` : `solve() -> bool`, `get_solution() -> list[int]`, `_enter`, `_delete`.
 - Sortie du solveur : il renvoie un indice d'emplacement p par qubit (décodage des x dans la sous-classe, car la numérotation lui est propre). `Layout` traduit p → coordonnées → `Register`.
 - Pour le `Register` : `from_coordinates` recentre par défaut (`center=True`), ce qui peut sortir un atome du disque. Garder `center=False`, ou `Register(dict)`.
+- Restent : `Layout.convert_to_pulser`, des tests pour `PySAT`, `bfs` et `to_dot_string`, et `nb_qubits` qui est à la fois dans `SolverParameters` et lu dans le DAG (`dag.num_qubits`).
