@@ -4,7 +4,7 @@ pytest.register_assert_rewrite("tests.DAG.dag_checker")
 
 import random
 
-from src.qiskit2pulser.qiskit_to_dag import _gate_types
+from src.qiskit2pulser.DAG.qiskit_to_dag import _gate_types
 from tests.circuit_generator import generate_circuit_and_dag
 from tests.DAG.dag_checker import DAGChecker
 
