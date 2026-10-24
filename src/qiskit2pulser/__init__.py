@@ -58,4 +58,6 @@ def main() -> None:
     solver_parameters = SolverParameters(pulser_parameters, qc.num_qubits)
     layout = Layout(pulser_parameters)
     with PySAT(solver_parameters, layout, dag) as solver:
-        print(solver.solve())
+        if solver.solve() is False:
+            raise RuntimeError("aucun placement des atomes trouvé")
+        print(solver.get_solution())
