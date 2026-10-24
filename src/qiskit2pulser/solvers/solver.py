@@ -17,6 +17,10 @@ class Solver(ABC):
         """Try to solve the SAT problem"""
 
     @abstractmethod
+    def get_solution(self) -> list[int]:
+        """Return a list with the position associated to each qubit"""
+
+    @abstractmethod
     def _delete(self) -> None:
         """Free the resources held by the underlying solver."""
 

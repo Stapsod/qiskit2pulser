@@ -138,4 +138,16 @@ class PySAT(Solver):
             self.solver = None
 
     def solve(self) -> bool:
-        return self.solver.solve()
+        self._has_solution = self.solver.solve()
+        return self._has_solution
+
+    def get_solution(self) -> list[int]:
+        assert self._has_solution, "UNSAT does not have solution"
+        model = self.solver.get_model()
+        res = []
+        for q in range(self.Q):
+            for p in range(self.P):
+                if model[self._access_litterals("x", q, p) - 1] > 0:
+                    res.append(p)
+                    break
+        return res
