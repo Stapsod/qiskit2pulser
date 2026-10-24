@@ -84,3 +84,5 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 - Extraction des CZ : le DFS récursif dans `PySAT.__post_init__` est juste, mais lève `RecursionError` dès ≈ 1000 portes sur un chemin. Son choix : un BFS générique dans `DAG`, avec une fonction passée en paramètre.
 - Point à garder en tête : un BFS depuis les entrées ne garantit pas l'ordre topologique (cf. l'idée des prédécesseurs du 11).
 - Test préliminaire, sa variante : lancer le SAT sans la famille 5 (CZ). Point relevé : avec n ≤ 100 et un pas ≤ 4 µm, la grille contient toujours une sous-grille de pas ≥ 4 µm d'au moins 100 points (489 au pas de 2), donc ce test est toujours SAT et se réduit à vérifier n ≤ `max_atoms`. Pas tranché.
+- Sortie du solveur : il renvoie un indice d'emplacement p par qubit (décodage des x dans la sous-classe, car la numérotation lui est propre). `Layout` traduit p → coordonnées → `Register`.
+- Pour le `Register` : `from_coordinates` recentre par défaut (`center=True`), ce qui peut sortir un atome du disque. Garder `center=False`, ou `Register(dict)`.
