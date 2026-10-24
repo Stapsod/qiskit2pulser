@@ -77,3 +77,10 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 - `Layout` porte toute la logique géométrique (distance, trop proche si d < `min_dist`, à portée de CZ si `min_dist` ≤ d ≤ `threshold` de la config) ; le solveur s'en sert pour D et N(p).
 - Géométrie sans P² paires : choix du motif de décalages (stencil), qui exploite la régularité de la grille. Voisinages précalculés à l'init. KD-tree (`cKDTree`) gardé en réserve si la grille cesse d'être régulière.
 - Ouvert : `nb_qubits` dans `SolverParameters` mais `cz` en argument d'`encode`.
+
+### 2026-10-24
+- Quelles portes alimentent C : son critère physique est « le qubit passe-t-il en Rydberg, et avec qui ». En digital, ça n'arrive que dans une CZ, à condition que le circuit soit en base native (SWAP, Toffoli… décomposés avant), que les CZ passent par `rydberg_local` et qu'elles restent sérialisées.
+- En analogique (plus tard), Rydberg global : le critère ne se limite plus aux paires des CZ.
+- Extraction des CZ : le DFS récursif dans `PySAT.__post_init__` est juste, mais lève `RecursionError` dès ≈ 1000 portes sur un chemin. Son choix : un BFS générique dans `DAG`, avec une fonction passée en paramètre.
+- Point à garder en tête : un BFS depuis les entrées ne garantit pas l'ordre topologique (cf. l'idée des prédécesseurs du 11).
+- Test préliminaire, sa variante : lancer le SAT sans la famille 5 (CZ). Point relevé : avec n ≤ 100 et un pas ≤ 4 µm, la grille contient toujours une sous-grille de pas ≥ 4 µm d'au moins 100 points (489 au pas de 2), donc ce test est toujours SAT et se réduit à vérifier n ≤ `max_atoms`. Pas tranché.
