@@ -3,8 +3,8 @@ import random
 from qiskit import QuantumCircuit
 from qiskit.circuit.library import get_standard_gate_name_mapping
 
-from src.qiskit2pulser.DAG.DAG import DAG
-from src.qiskit2pulser.DAG.qiskit_to_dag import QC_to_DAG
+from qiskit2pulser.DAG.DAG import DAG
+from qiskit2pulser.DAG.qiskit_to_dag import QC_to_DAG
 
 
 def apply_gate(qc: QuantumCircuit, gate: str, *qubits: int):
