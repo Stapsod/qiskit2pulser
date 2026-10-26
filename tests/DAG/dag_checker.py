@@ -40,6 +40,19 @@ class DAGChecker:
             "DAGChecker.check_entries: entries contains duplicated nodes."
         )
 
+    def check_bfs(self):
+        visited = []
+        self.dag.bfs(visited.append)
+        assert len(set(visited)) == len(visited), (
+            "DAGChecker.check_bfs: bfs visited some nodes more than once."
+        )
+        assert len(visited) == len(self.qc.data), (
+            f"DAGChecker.check_bfs: expected {len(self.qc.data)} visited nodes, got {len(visited)}"
+        )
+        assert set(visited) == self.all_nodes, (
+            f"DAGChecker.check_bfs: visited nodes do not match the dag nodes. Missing {self.all_nodes - set(visited)}, unexpected {set(visited) - self.all_nodes}"
+        )
+
     def _get_all_nodes(self) -> set[Node]:
         res = set()
         stack = list(self.dag.entries)

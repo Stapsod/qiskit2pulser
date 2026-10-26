@@ -11,3 +11,7 @@ def test_qubit_chains(checker: DAGChecker):
 
 def test_entries(checker: DAGChecker):
     checker.check_entries()
+
+
+def test_bfs(checker: DAGChecker):
+    checker.check_bfs()
