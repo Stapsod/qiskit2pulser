@@ -101,5 +101,6 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 - `Layout.convert_to_pulser(positions)` : `Register(dict)` sans recentrage, identifiants `str` `q{i}` (i = indice du qubit Qiskit ; les `int` sont dépréciés dans Pulser 1.9). Pas de validation contre le device dans `Layout`, `Sequence` revalide.
 - Vérifié dans Pulser 1.9.1 : `DigitalAnalogDevice.requires_layout` vaut `True`, mais un `Register` sans `RegisterLayout` est accepté par `Sequence`. Le pas de 2 µm reste donc possible.
 - Testsuite SAT, deux propriétés : correction (une solution SAT respecte les contraintes, via un oracle indépendant de `Layout`) et complétude (pas d'UNSAT sur une instance faisable). Il faut des instances dont la réponse est connue et de petites grilles. Rien de tranché.
-- `bfs` : testé sans doublon et exhaustif (référence : `qc.data`). L'ordre topologique n'est pas garanti par l'implémentation actuelle et n'est pas testé ; reste à décider si `bfs` doit le promettre.
-- Restent : des tests pour `PySAT` et `to_dot_string`, et `SolverParameters.pulser_parameters`, que personne ne lit.
+- `bfs` : testé sans doublon et exhaustif (référence : `qc.data`). L'ordre topologique n'est pas garanti par l'implémentation actuelle et n'est pas testé. Reporté, sans doute à l'étape suivante.
+- `to_dot_string` : testé contre le DAG (nœuds, arêtes, arêtes pointillées qubit → première porte). Arêtes comptées en multiensemble : une arête par fil de qubit, donc deux CZ successives sur la même paire donnent deux flèches. Ce comportement est figé par le test, à revoir s'il ne convient pas.
+- Restent : des tests pour `PySAT`, et `SolverParameters.pulser_parameters`, que personne ne lit.
