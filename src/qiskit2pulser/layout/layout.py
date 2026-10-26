@@ -1,7 +1,8 @@
 import math
 
-from qiskit2pulser.parameters.pulser_parameters import PulserParameters
 from pulser import Register
+
+from qiskit2pulser.parameters.pulser_parameters import PulserParameters
 
 
 class Layout:
@@ -69,7 +70,7 @@ class Layout:
         ]
 
     def convert_to_register(self, positions: list[int]) -> Register:
-        dic = dict()
+        dic = {}
         for i in range(len(positions)):
             dic[f"q{i}"] = self.coordinates(positions[i])
         return Register(dic)

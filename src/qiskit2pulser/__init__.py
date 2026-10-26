@@ -2,7 +2,6 @@ import argparse
 import subprocess
 import tempfile
 
-from pulser import Register
 from qiskit import QuantumCircuit
 
 
