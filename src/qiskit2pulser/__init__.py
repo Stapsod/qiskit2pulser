@@ -31,7 +31,11 @@ def main() -> None:
     )
     args = parser.parse_args()
 
-    from src.qiskit2pulser.qiskit_to_dag import QC_to_DAG
+    from qiskit2pulser.DAG.qiskit_to_dag import QC_to_DAG
+    from qiskit2pulser.layout.layout import Layout
+    from qiskit2pulser.parameters.pulser_parameters import PulserParameters
+    from qiskit2pulser.parameters.solver_parameters import SolverParameters
+    from qiskit2pulser.solvers.solver_factory import make_solver
 
     qc = demo_circuit()
     print("=== Circuit Qiskit ===")
@@ -46,8 +50,17 @@ def main() -> None:
         with open(f"out/{args.dot_file}", "w") as f:
             f.write(dot)
         print(f"DOT écrit dans out/{args.dot_file}")
-    elif not args.show:
-        print(dot)
 
     if args.show:
         show_dot(dot)
+
+    config_path = "config.toml"
+    pulser_parameters = PulserParameters(config_path)
+    layout = Layout(pulser_parameters)
+    solver_parameters = SolverParameters(config_path, pulser_parameters, layout, dag)
+    with make_solver(solver_parameters) as solver:
+        if solver.solve() is False:
+            raise RuntimeError("aucun placement des atomes trouvé")
+        positions = solver.get_solution()
+    register = layout.convert_to_register(positions)
+    register.draw()
