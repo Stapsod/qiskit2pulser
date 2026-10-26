@@ -2,6 +2,7 @@ import argparse
 import subprocess
 import tempfile
 
+from pulser import Register
 from qiskit import QuantumCircuit
 
 
@@ -61,4 +62,6 @@ def main() -> None:
     with make_solver(solver_parameters) as solver:
         if solver.solve() is False:
             raise RuntimeError("aucun placement des atomes trouvé")
-        print(solver.get_solution())
+        positions = solver.get_solution()
+    register = layout.convert_to_register(positions)
+    register.draw()
