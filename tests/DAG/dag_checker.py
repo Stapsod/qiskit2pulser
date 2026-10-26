@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 
 from qiskit import QuantumCircuit
 
-from src.qiskit2pulser.DAG.DAG import DAG, Node
+from qiskit2pulser.DAG.DAG import DAG, Node
 
 
 @dataclass

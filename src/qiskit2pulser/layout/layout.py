@@ -1,6 +1,6 @@
 import math
 
-from src.qiskit2pulser.parameters.pulser_parameters import PulserParameters
+from qiskit2pulser.parameters.pulser_parameters import PulserParameters
 
 
 class Layout:
