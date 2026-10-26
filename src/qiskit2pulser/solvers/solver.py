@@ -1,16 +1,12 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 
-from qiskit2pulser.DAG.DAG import DAG
-from qiskit2pulser.layout.layout import Layout
-from src.qiskit2pulser.parameters.solver_parameters import SolverParameters
+from qiskit2pulser.parameters.solver_parameters import SolverParameters
 
 
 @dataclass
 class Solver(ABC):
     parameters: SolverParameters
-    layout: Layout
-    dag: DAG
 
     @abstractmethod
     def solve(self) -> bool:

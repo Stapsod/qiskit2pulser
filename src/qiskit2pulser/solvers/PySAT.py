@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 import pysat.solvers as pysat_solvers
 
 from qiskit2pulser.DAG.DAG import Node
-from src.qiskit2pulser.solvers.solver import Solver
+from qiskit2pulser.solvers.solver import Solver
 
 
 @dataclass
@@ -12,8 +12,8 @@ class PySAT(Solver):
     solver: pysat_solvers.Solver | None = field(init=False, default=None)
 
     def _init_litterals(self):
-        self.Q = self.dag.num_qubits
-        self.P = self.layout.nb_points
+        self.Q = self.parameters.dag.num_qubits
+        self.P = self.parameters.layout.nb_points
         # Size of each family, the numbering starts at 1 (0 is not a literal)
         x = self.Q * self.P
         s = self.Q * (self.P - 1)
@@ -24,7 +24,7 @@ class PySAT(Solver):
         }
 
     def _init_solver(self):
-        self.solver = pysat_solvers.Solver(name="cadical195")
+        self.solver = pysat_solvers.Solver(name=self.parameters.name)
 
     def _get_cz(self):
         self.cz_tuples = set()
@@ -35,7 +35,7 @@ class PySAT(Solver):
                 t = (q1, q2) if q1 < q2 else (q2, q1)
                 self.cz_tuples.add(t)
 
-        self.dag.bfs(use_node)
+        self.parameters.dag.bfs(use_node)
 
     def _access_litterals(self, t: str, y: int, x: int) -> int:
         # x[q][p] and s[q][k] are rows of a qubit, t[p][j] is the column of a spot
@@ -101,7 +101,7 @@ class PySAT(Solver):
                 )
 
     def _minimal_distance(self):
-        for p1, p2 in self.layout.too_close_pairs():
+        for p1, p2 in self.parameters.layout.too_close_pairs():
             self.solver.add_clause(
                 [
                     -self._access_litterals("t", p1, self.Q - 1),
@@ -116,7 +116,7 @@ class PySAT(Solver):
                     [-self._access_litterals("x", a, p)]
                     + [
                         self._access_litterals("x", b, n)
-                        for n in self.layout.cz_neighbours(p)
+                        for n in self.parameters.layout.cz_neighbours(p)
                     ]
                 )
 
