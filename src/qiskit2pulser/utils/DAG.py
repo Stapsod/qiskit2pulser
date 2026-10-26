@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections import defaultdict
+from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from itertools import count
 
@@ -48,22 +48,32 @@ class DAG:
         for q in gate.qubits:
             self.last_gate[q] = node
 
-    def to_dot_string(self):
-        res = "digraph DAG\n{\n\trankdir=LR;\n"
-        decl = ""
-        edges = ""
+    def bfs(self, f):
         gates = set()
 
-        for e in self.entries:
-            act = [e]
-            while act != []:
-                node = act.pop(0)
-                if node.name not in gates:
-                    gates.add(node.name)
-                    decl += f'\t{node.name} [label="{node.name}", shape=square];\n'
-                    for succ in node.successors.values():
-                        act.append(succ)
-                        edges += f"\t{node.name} -> {succ.name};\n"
+        queue = deque(self.entries)
+        while queue:
+            node = queue.popleft()
+            if node.name not in gates:
+                gates.add(node.name)
+                f(node)
+                for succ in node.successors.values():
+                    queue.append(succ)
+
+    def to_dot_string(self):
+        res = "digraph DAG\n{\n\trankdir=LR;\n"
+        decl_l = []
+        edges_l = []
+
+        def use_node(node: Node):
+            decl_l.append(f'\t{node.name} [label="{node.name}", shape=square];\n')
+            for succ in node.successors.values():
+                edges_l.append(f"\t{node.name} -> {succ.name};\n")
+
+        self.bfs(use_node)
+
+        decl = "".join(decl_l)
+        edges = "".join(edges_l)
 
         for q in range(self.num_qubits):
             name = f"q{q}"

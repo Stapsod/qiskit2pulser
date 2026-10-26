@@ -1,3 +1,5 @@
+import re
+from collections import Counter
 from dataclasses import dataclass, field
 
 from qiskit import QuantumCircuit
@@ -38,6 +40,50 @@ class DAGChecker:
         )
         assert len(set(self.dag.entries)) == len(self.dag.entries), (
             "DAGChecker.check_entries: entries contains duplicated nodes."
+        )
+
+    def check_bfs(self):
+        visited = []
+        self.dag.bfs(visited.append)
+        assert len(set(visited)) == len(visited), (
+            "DAGChecker.check_bfs: bfs visited some nodes more than once."
+        )
+        assert len(visited) == len(self.qc.data), (
+            f"DAGChecker.check_bfs: expected {len(self.qc.data)} visited nodes, got {len(visited)}"
+        )
+        assert set(visited) == self.all_nodes, (
+            f"DAGChecker.check_bfs: visited nodes do not match the dag nodes. Missing {self.all_nodes - set(visited)}, unexpected {set(visited) - self.all_nodes}"
+        )
+
+    def check_dot_string(self):
+        dot = self.dag.to_dot_string()
+        declared = re.findall(r"^\t(\w+) \[", dot, re.MULTILINE)
+        edges = Counter(re.findall(r"^\t(\w+) -> (\w+);$", dot, re.MULTILINE))
+        dashed = Counter(
+            re.findall(r"^\t(\w+) -> (\w+) \[style=dashed\];$", dot, re.MULTILINE)
+        )
+
+        qubits = [f"q{q}" for q in range(self.dag.num_qubits)]
+        expected_declared = [n.name for n in self.all_nodes] + qubits
+        assert Counter(declared) == Counter(expected_declared), (
+            f"DAGChecker.check_dot_string: declared nodes do not match. Expected {sorted(expected_declared)}, got {sorted(declared)}"
+        )
+
+        # One edge per qubit wire: two gates sharing several qubits are linked several times
+        expected_edges = Counter(
+            (n.name, s.name) for n in self.all_nodes for s in n.successors.values()
+        )
+        assert edges == expected_edges, (
+            f"DAGChecker.check_dot_string: edges do not match. Missing {expected_edges - edges}, unexpected {edges - expected_edges}"
+        )
+
+        expected_dashed = Counter(
+            (f"q{q}", g.name)
+            for q, g in enumerate(self.dag.first_gate)
+            if g is not None
+        )
+        assert dashed == expected_dashed, (
+            f"DAGChecker.check_dot_string: qubit edges do not match. Missing {expected_dashed - dashed}, unexpected {dashed - expected_dashed}"
         )
 
     def _get_all_nodes(self) -> set[Node]:
