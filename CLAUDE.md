@@ -112,3 +112,8 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 - Son idée : une hiérarchie Pulser > Layout > Solver, comprise comme une règle de dépendance (un niveau n'importe que ceux au-dessus de lui). Il s'agit de composition et de conversion, pas d'héritage.
 - `PulserParameters` et `config.toml` restent sur `8-sat-…` (reset volontaire ici). `from_pulser` est commenté en attendant la fusion.
 - Validation de `LayoutParameters` : `step`, `max_radius` et `min_dist` strictement positifs, et `threshold ≥ min_dist`. Relu et exécuté, ruff au vert.
+
+### 2026-11-05
+- Tests de `Layout` écrits par moi à sa demande (boilerplate), étape par étape. Oracle en force brute, indépendant du stencil. Fixture `layout_checker` (`tests/layout/conftest.py`) : cas limites + 30 cas aléatoires arrondis à 0,1 (frontières exactes fréquentes).
+- Étape 1 faite : grille (correction, complétude, P = 1961 / 489) et `distance`. Restent : voisinages, `too_close_pairs`, `convert_to_register`, validation de `LayoutParameters`.
+- Bug trouvé : `k = int(max_radius // step)` sous-estime en flottants (`0.5 // 0.1 == 4.0`, mais `5 * 0.1 == 0.5`), donc il manque des points du bord du disque. Même risque pour `r = int(threshold // step)` sur les voisinages. Correctif à son choix.
