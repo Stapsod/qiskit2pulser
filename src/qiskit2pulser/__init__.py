@@ -58,7 +58,7 @@ def main() -> None:
     config_path = "config.toml"
     pulser_parameters = PulserParameters(config_path)
     layout = Layout(LayoutParameters.from_pulser_parameters(pulser_parameters))
-    solver_parameters = SolverParameters(config_path, pulser_parameters, layout, dag)
+    solver_parameters = SolverParameters.from_config(config_path, layout, dag)
     with make_solver(solver_parameters) as solver:
         if solver.solve() is False:
             raise RuntimeError("aucun placement des atomes trouvé")
