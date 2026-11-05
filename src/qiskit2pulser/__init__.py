@@ -69,3 +69,6 @@ def main() -> None:
     positions = layout.get_positions(positions)
 
     backend = PulserBackend(pulser_parameters, positions)
+    sequence = backend.build(dag)
+    print("=== Sequence ===")
+    print(f"durée : {sequence.get_duration()} ns")
