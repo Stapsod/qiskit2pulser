@@ -1,5 +1,7 @@
 from dataclasses import dataclass
 
+from qiskit2pulser.parameters.pulser_parameters import PulserParameters
+
 
 @dataclass
 class LayoutParameters:
@@ -14,8 +16,6 @@ class LayoutParameters:
         if not self.min_dist <= self.threshold:
             raise ValueError(f"threshold must be in more than {self.min_dist}")
 
-    # @classmethod
-    # def from_pulser_parameters(cls: LayoutParameters, params: PulserParameters):
-    #     return cls(
-    #         params.step, params.max_radius, params.min_dist, params.threshold
-    #     )
+    @classmethod
+    def from_pulser_parameters(cls, params: PulserParameters) -> "LayoutParameters":
+        return cls(params.step, params.max_radius, params.min_dist, params.threshold)
