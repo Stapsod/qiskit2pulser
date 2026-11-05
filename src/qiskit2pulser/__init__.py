@@ -2,7 +2,10 @@ import argparse
 import subprocess
 import tempfile
 
+from pulser import DigitalAnalogDevice, Sequence
 from qiskit import QuantumCircuit
+
+from qiskit2pulser.backend.pulser_backend import PulserBackend
 
 
 def demo_circuit() -> QuantumCircuit:
@@ -63,5 +66,6 @@ def main() -> None:
         if solver.solve() is False:
             raise RuntimeError("aucun placement des atomes trouvé")
         positions = solver.get_solution()
-    register = layout.convert_to_register(positions)
-    register.draw()
+    positions = layout.get_positions(positions)
+
+    backend = PulserBackend(pulser_parameters, positions)
