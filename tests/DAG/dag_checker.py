@@ -55,6 +55,20 @@ class DAGChecker:
             f"DAGChecker.check_bfs: visited nodes do not match the dag nodes. Missing {self.all_nodes - set(visited)}, unexpected {set(visited) - self.all_nodes}"
         )
 
+    def check_topological(self):
+        visited = []
+        self.dag.topological(visited.append)
+        assert len(visited) == len(set(visited)) == len(self.all_nodes), (
+            f"DAGChecker.check_topological: expected each of the {len(self.all_nodes)} nodes once, got {len(visited)} visits ({len(set(visited))} distinct)"
+        )
+        # On every wire, the gates must come in the order of the circuit
+        rank = {node: i for i, node in enumerate(visited)}
+        for node in self.all_nodes:
+            for q, succ in node.successors.items():
+                assert rank[node] < rank[succ], (
+                    f"DAGChecker.check_topological: {succ.name} visited before its predecessor {node.name} on qubit {q}"
+                )
+
     def check_dot_string(self):
         dot = self.dag.to_dot_string()
         declared = re.findall(r"^\t(\w+) \[", dot, re.MULTILINE)

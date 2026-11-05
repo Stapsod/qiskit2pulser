@@ -17,5 +17,9 @@ def test_bfs(checker: DAGChecker):
     checker.check_bfs()
 
 
+def test_topological(checker: DAGChecker):
+    checker.check_topological()
+
+
 def test_dot_string(checker: DAGChecker):
     checker.check_dot_string()

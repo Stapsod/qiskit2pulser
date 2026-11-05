@@ -60,6 +60,26 @@ class DAG:
                 for succ in node.successors.values():
                     queue.append(succ)
 
+    def topological(self, f):
+        """Call f on every node, each one after all its predecessors (Kahn)."""
+        # One edge per qubit wire, counted and consumed the same way
+        indegree = defaultdict(int)
+
+        def count(node: Node):
+            for succ in node.successors.values():
+                indegree[succ] += 1
+
+        self.bfs(count)
+
+        queue = deque(self.entries)
+        while queue:
+            node = queue.popleft()
+            f(node)
+            for succ in node.successors.values():
+                indegree[succ] -= 1
+                if indegree[succ] == 0:
+                    queue.append(succ)
+
     def to_dot_string(self):
         res = "digraph DAG\n{\n\trankdir=LR;\n"
         decl_l = []
