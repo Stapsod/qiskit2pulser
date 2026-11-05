@@ -2,11 +2,11 @@ import math
 
 from pulser import Register
 
-from qiskit2pulser.parameters.pulser_parameters import PulserParameters
+from qiskit2pulser.parameters.layout_parameters import LayoutParameters
 
 
 class Layout:
-    def __init__(self, params: PulserParameters) -> None:
+    def __init__(self, params: LayoutParameters) -> None:
         self.step = params.step
         self.max_radius = params.max_radius
         self.min_dist = params.min_dist
