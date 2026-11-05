@@ -38,6 +38,8 @@ SAT_clauses: (build "SAT/clauses")
 
 SAT_alternatives: (build "SAT/alternatives")
 
+pulses: (build "pulses")
+
 all:
     #!/usr/bin/env bash
     set -euo pipefail
