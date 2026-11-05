@@ -4,7 +4,7 @@ from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from itertools import count
 
-from src.qiskit2pulser.utils.Gate import Gate
+from qiskit2pulser.DAG.Gate import Gate
 
 
 @dataclass(eq=False)

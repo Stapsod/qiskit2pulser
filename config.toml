@@ -1,0 +1,12 @@
+[pulser]
+# Rabi frequency of the CZ pulses (rad/µs), at most 2π·10 on DigitalAnalogDevice
+omega = 2.0
+# Step of the candidate grid (µm)
+step = 2.0
+# Max distance between the two atoms of a CZ (µm), at most R_b(omega).
+# Defaults to R_b(omega) if omitted.
+# threshold = 10.0
+
+[SAT_solver]
+type = "pysat"
+name = "cadical195"
