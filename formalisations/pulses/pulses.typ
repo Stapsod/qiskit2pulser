@@ -135,7 +135,24 @@ un seuil (ou une marge) selon l'erreur tolérée.
   recentrage) et la `Sequence`. Il porte la création des impulsions et le
   choix de $Omega$ par canal.
 - `Gate` ne dépend pas de Pulser.
-- *Ouvert* : le contrat. Chaque porte renvoie une liste ordonnée
-  d'instructions abstraites (impulsion : canal, qubit, aire, phase ;
-  `phase_shift` : qubit, $phi$), que le backend exécute. Restent à définir
-  le vocabulaire et la façon de nommer un canal sans Pulser.
+- *Contrats* (`utils/contracts.py`) : les opérations natives communes à
+  tous les backends, `R(θ, φ, q)`, `Rz(φ, q)` et `CZ(a, b)` (symétrique),
+  sous forme de `dataclass` figées. Les rotations suivent la convention de
+  Qiskit (axe $(cos phi, sin phi, 0)$). Chaque porte renvoie sa liste
+  ordonnée de contrats (`Gate.contracts()`).
+- *Traduction* (`PulserBackend.translate`, un `match` par type de contrat) :
+  - `R(θ, φ)` devient une impulsion `raman_local` d'aire $theta$ et de phase
+    $-phi$. Une aire négative est ramenée à $R(-theta, phi + pi)$, une aire
+    nulle est ignorée ;
+  - `Rz(φ)` devient `phase_shift(φ)` en base `digital` ;
+  - `CZ(a, b)` devient $pi$ sur $a$, $2 pi$ sur $b$ et $pi$ sur $a$, sur
+    `rydberg_local`.
+- *Ordre* : `PulserBackend.build(dag)` parcourt le DAG en ordre topologique
+  (`DAG.topological`, algorithme de Kahn). Le `bfs` ne garantit pas cet
+  ordre. Pulser place chaque impulsion au plus tôt
+  sur son canal : deux canaux distincts peuvent jouer en parallèle.
+- Canaux déclarés à la première utilisation (`phase_shift` exige un canal
+  `digital` déclaré).
+- Vérifié de bout en bout dans l'émulateur (circuits aléatoires, CNOT et
+  état de Bell construits avec la CZ, atomes à 4 µm) : erreur de population
+  $< 3 dot 10^(-5)$.
