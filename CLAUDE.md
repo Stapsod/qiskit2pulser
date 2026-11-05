@@ -152,3 +152,16 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 - Formalisation `formalisations/pulses/pulses.typ` (recette `just pulses`) : choix sur Ω, forme et durée, table des portes. Vérifiée dans l'émulateur : X, Y, Z et H sont exactes, avec une erreur < 1e-5.
 - Trouvé : l'erreur de la CZ croît avec d (8,6e-4 à 4 µm, 0,20 à 10 µm, 0,43 à 11,8 µm = R_b(2)). Le seuil par défaut `threshold = R_b(Ω)` donne donc des CZ fausses. Ouvert : un seuil ou une marge selon l'erreur tolérée.
 - Loi mesurée : erreur CZ ≈ 0,57·(d/R_b)⁶ (Blackman, émulateur idéal). Seuil pour une erreur ε : R_b·(ε/0,57)^(1/6). À Ω = 2 rad/µs, 1 % donne ≈ 6 µm et 0,1 % donne ≈ 4,1 µm (presque min_dist). Son choix : baisser le threshold, valeur pas encore fixée.
+- Contrats, phase théorique. Son idée : des contrats propres à chaque backend, chaînés en liste, des objets simples derrière une interface commune, et dans le backend un traducteur par type de contrat. Points relevés :
+  - qui produit les contrats propres au backend ? Si ce sont les portes, elles dépendent de chaque backend ;
+  - à quel niveau se place le contrat : porte native (R(θ,φ), R_z, CZ), commune à tous les backends, ou impulsion, propre aux atomes neutres ;
+  - précision de sa part : la liste chaînée est propre à chaque porte (nœud du DAG). Le DAG reste la structure globale, donc le parallélisme est conservé.
+- Son choix : les portes se décomposent en opérations natives communes à tous les backends (rotations), et chaque backend les interprète. Pour Pulser, c'est `PulserBackend` qui traduit en canal, aire et phase.
+- Son choix : le vocabulaire des contrats, ce sont les opérations natives { R(θ, φ), R_z(φ), CZ(a, b) }, et la CZ est un contrat comme les autres. Le backend traduit chaque contrat en une ou plusieurs instructions (pour Pulser : CZ → 3 impulsions `rydberg`). Proposé mais pas tranché : la convention de Qiskit dans les contrats (le −φ vit dans `PulserBackend`) et une CZ symétrique (l'orientation est choisie par le backend).
+- Contrats implémentés par moi à sa demande. Des `dataclass(frozen=True)` `R`, `Rz` et `CZ` dans `utils/contracts.py`, plutôt que sa liste chaînée avec un enum de type : une `list` suffit tant qu'aucune passe ne réécrit les chaînes. `Gate.contracts()` remplace `convertion`, et H est ajoutée à `_gate_types`.
+- `PulserBackend` :
+  - `translate`, un `match` par contrat, avec le −φ, le `phase_shift` en base digital et la CZ π–2π–π ;
+  - `build(dag)` ;
+  - les canaux sont déclarés à leur première utilisation.
+- `DAG.topological` (Kahn) a été ajouté, car le `bfs` sortait `cz1` avant ses prédécesseurs. Il est testé.
+- Vérifié de bout en bout dans l'émulateur : erreur < 3e-5 sur les circuits aléatoires, et la CNOT comme l'état de Bell construits avec la CZ sont corrects. La formalisation `pulses.typ` est à jour.
