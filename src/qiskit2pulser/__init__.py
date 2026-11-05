@@ -33,6 +33,7 @@ def main() -> None:
 
     from qiskit2pulser.DAG.qiskit_to_dag import QC_to_DAG
     from qiskit2pulser.layout.layout import Layout
+    from qiskit2pulser.parameters.layout_parameters import LayoutParameters
     from qiskit2pulser.parameters.pulser_parameters import PulserParameters
     from qiskit2pulser.parameters.solver_parameters import SolverParameters
     from qiskit2pulser.solvers.solver_factory import make_solver
@@ -56,7 +57,7 @@ def main() -> None:
 
     config_path = "config.toml"
     pulser_parameters = PulserParameters(config_path)
-    layout = Layout(pulser_parameters)
+    layout = Layout(LayoutParameters.from_pulser_parameters(pulser_parameters))
     solver_parameters = SolverParameters(config_path, pulser_parameters, layout, dag)
     with make_solver(solver_parameters) as solver:
         if solver.solve() is False:
