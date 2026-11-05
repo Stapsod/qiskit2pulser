@@ -123,3 +123,32 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 - Son choix : `SolverParameters` devient une `@dataclass` simple (`type`, `name`, `layout`, `dag`) avec `from_config`, et `pulser_parameters` est retiré.
 - n = 0 : `PySAT` plante (littéral 0 dans `_minimal_distance`). Son choix : un circuit vide doit lever une exception, mais c'est un détail non bloquant, donc pas de test dédié. Le cas est retiré de la testsuite.
 - Tests de `PySAT` : correction de la sortie (oracle `Layout`, paires CZ lues dans `qc.data`), réponses SAT/UNSAT attendues sur des cas connus, circuits aléatoires. Une mutation montre que l'absence de « au plus un emplacement par qubit » est peu détectée, car le décodage masque le problème. Complétude par force brute : reportée, il jugera plus tard si elle est utile.
+- Branche `15-transpose-gates-into-pulse`. Relecture de `Gate.py` :
+  - `pulse()` est abstraite, donc `Gate_Y`, `Gate_Z` et `Gate_CZ` ne sont plus instanciables, et la testsuite plante dès la collecte ;
+  - Z vaut `phase_shift(π)` et non π/2 (π/2 donne S) ;
+  - H n'est pas une simple impulsion π/2 ;
+  - dans le commentaire de la CZ, les π sur le contrôle doivent passer par `rydberg_local` et non par une X `raman` ;
+  - avec une Blackman, durée ≠ aire/Ω, car le pic vaut ≈ 2,4 × la moyenne (π en 500 ns : pic de 15 rad/µs). Pour la CZ, c'est le pic qui doit rester ≤ Ω, sinon R_b(pic) < seuil du SAT.
+- Y : Y ≃ R_y(π) = R(π, π/2), soit une impulsion d'aire π et de phase −π/2. Expliqué à sa demande.
+- Ses choix : `convertion(seq: Sequence)`, puisque chaque porte connaît ses qubits ; Ω passé au DAG puis aux portes pour calculer les durées.
+- Points relevés :
+  - le DAG est construit avant le chargement des paramètres dans `main`, et le SAT n'a pas besoin d'Ω ;
+  - l'id Pulser `q{i}` est codé dans `convert_to_register`, donc deux endroits doivent rester d'accord ;
+  - `area / omega` est en µs alors que Pulser attend des ns entières, multiples de 4 et ≥ 16 ;
+  - `pulse()` est toujours abstraite, et la testsuite plante.
+- Son idée : une IR Pulser qui porte `PulserParameters`, la `Sequence`, la création des impulsions et un dict qubit → identifiant. `_pulse` sort de `Gate`. Ouvert :
+  - qui décide des impulsions : la porte, qui appelle des primitives de l'IR, ou l'IR, qui fait le dispatch sur le type de porte ;
+  - la source de vérité des identifiants, aujourd'hui `convert_to_register`.
+- Son option C, un contrat : chaque porte renvoie une liste d'instructions abstraites (canal, qubit, aire, phase ; phase_shift), sans dépendre de Pulser, et l'IR Pulser les exécute (durée, forme, unités, ciblage, identifiants). Ouvert : le vocabulaire d'instructions, et la façon de nommer le canal sans Pulser.
+- Son choix : `PulserBackend` (`backend/pulser_backend.py`), dans l'idée d'avoir d'autres backends plus tard. Il construit les identifiants `q{i}`, le `Register` et la `Sequence`, ce qui fait de lui la source de vérité des identifiants. `Layout.convert_to_register` renvoie désormais des coordonnées, et `Layout` ne dépend plus de Pulser.
+- Relecture : `qubits_id` est un `dict_keys`, alors que les portes auront besoin de passer d'un indice à un identifiant. Restent les erreurs ruff (imports inutilisés, `omega` non défini dans `Gate`) et la testsuite cassée par `pulse()` abstraite.
+- Corrections faites : `qubits_id` est devenu `{i: "q{i}"}`, `convert_to_register` est renommée `get_positions`, `pulse()` n'est plus abstraite et `_pulse` est passé dans le backend. La testsuite et la démo passent. Restent 6 erreurs ruff, que la CI refusera.
+- `_pulse` lève `ValueError` : la durée calculée vaut 0,05, car l'expression est en µs alors que Pulser attend des ns. L'impulsion utilise aussi `max_omega` et non l'Ω de config. Le pic de la Blackman reste à traiter.
+- Son choix (sur ma proposition, implémentée par moi à sa demande) : deux Ω, qui désignent tous deux le pic d'amplitude.
+  - `omega` (config) fixe les impulsions `rydberg_local` et R_b, donc le seuil SAT.
+  - `omega_raman` (optionnel dans `[pulser]`, par défaut le `max_amp` de `raman_local`, vérifié) ne fixe que la vitesse des portes à 1 qubit.
+  - Forme : Blackman partout. Durée : `BlackmanWaveform.from_max_val(Ω, aire)`, arrondie au multiple supérieur de `clock_period`, avec au moins `min_duration`, ce qui garde le pic ≤ Ω (`PulserBackend._duration`).
+  - Exemples : π en raman = 124 ns, π en rydberg à Ω = 2 rad/µs = 3744 ns.
+- Formalisation `formalisations/pulses/pulses.typ` (recette `just pulses`) : choix sur Ω, forme et durée, table des portes. Vérifiée dans l'émulateur : X, Y, Z et H sont exactes, avec une erreur < 1e-5.
+- Trouvé : l'erreur de la CZ croît avec d (8,6e-4 à 4 µm, 0,20 à 10 µm, 0,43 à 11,8 µm = R_b(2)). Le seuil par défaut `threshold = R_b(Ω)` donne donc des CZ fausses. Ouvert : un seuil ou une marge selon l'erreur tolérée.
+- Loi mesurée : erreur CZ ≈ 0,57·(d/R_b)⁶ (Blackman, émulateur idéal). Seuil pour une erreur ε : R_b·(ε/0,57)^(1/6). À Ω = 2 rad/µs, 1 % donne ≈ 6 µm et 0,1 % donne ≈ 4,1 µm (presque min_dist). Son choix : baisser le threshold, valeur pas encore fixée.
