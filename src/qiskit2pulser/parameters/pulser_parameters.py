@@ -19,12 +19,19 @@ class PulserParameters:
         self.max_atoms = device.max_atom_num
         self.interaction_coeff = device.interaction_coeff
         self.max_omega = device.channels["rydberg_local"].max_amp
+        self.max_omega_raman = device.channels["raman_local"].max_amp
 
         # Configuration choices
         self.omega = float(config["omega"])
         self.step = float(config["step"])
         if not 0 < self.omega <= self.max_omega:
             raise ValueError(f"omega must be in ]0, {self.max_omega}] rad/µs")
+        # Optional in the config: defaults to the fastest raman pulses
+        self.omega_raman = float(config.get("omega_raman", self.max_omega_raman))
+        if not 0 < self.omega_raman <= self.max_omega_raman:
+            raise ValueError(
+                f"omega_raman must be in ]0, {self.max_omega_raman}] rad/µs"
+            )
 
         # Derived values
         self.blockade_radius = device.rydberg_blockade_radius(self.omega)
