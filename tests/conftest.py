@@ -1,6 +1,7 @@
 import pytest
 
 pytest.register_assert_rewrite("tests.DAG.dag_checker")
+pytest.register_assert_rewrite("tests.layout.layout_checker")
 
 import random
 

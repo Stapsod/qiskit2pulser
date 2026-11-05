@@ -104,3 +104,18 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 - `bfs` : testé sans doublon et exhaustif (référence : `qc.data`). L'ordre topologique n'est pas garanti par l'implémentation actuelle et n'est pas testé. Reporté, sans doute à l'étape suivante.
 - `to_dot_string` : testé contre le DAG (nœuds, arêtes, arêtes pointillées qubit → première porte). Arêtes comptées en multiensemble : une arête par fil de qubit, donc deux CZ successives sur la même paire donnent deux flèches. Ce comportement est figé par le test, à revoir s'il ne convient pas.
 - Restent : des tests pour `PySAT`, et `SolverParameters.pulser_parameters`, que personne ne lit.
+
+### 2026-11-04
+- Tests de `Layout` sur `xxx-create-layout` (branche partie de `main`). `layout.py` importait `PulserParameters`, qui n'existe que sur `8-sat-…`. La méthode s'appelle `convert_to_register`, pas `convert_to_pulser`.
+- Construire `Layout` sans config pour les tests. Pistes vues : plusieurs constructeurs via `@classmethod`, ou une `@dataclass` avec `__post_init__`.
+- Son choix : `LayoutParameters` (`parameters/layout_parameters.py`), une `@dataclass` simple (step, max_radius, min_dist, threshold) que `Layout` reçoit. Invariants géométriques dans `__post_init__`. La conversion `from_pulser` sera dans `LayoutParameters` (`layout/` dépend de `parameters/`), et `threshold ≤ R_b(Ω)` reste dans `PulserParameters`.
+- Son idée : une hiérarchie Pulser > Layout > Solver, comprise comme une règle de dépendance (un niveau n'importe que ceux au-dessus de lui). Il s'agit de composition et de conversion, pas d'héritage.
+- `PulserParameters` et `config.toml` restent sur `8-sat-…` (reset volontaire ici). `from_pulser` est commenté en attendant la fusion.
+- Validation de `LayoutParameters` : `step`, `max_radius` et `min_dist` strictement positifs, et `threshold ≥ min_dist`. Relu et exécuté, ruff au vert.
+
+### 2026-11-05
+- Tests de `Layout` écrits par moi à sa demande (boilerplate), étape par étape. Oracle en force brute, indépendant du stencil. Fixture `layout_checker` (`tests/layout/conftest.py`) : cas limites + 30 cas aléatoires arrondis à 0,1 (frontières exactes fréquentes).
+- Étape 1 faite : grille (correction, complétude, P = 1961 / 489) et `distance`. Restent : voisinages, `too_close_pairs`, `convert_to_register`, validation de `LayoutParameters`.
+- Bug trouvé : `k = int(max_radius // step)` sous-estime en flottants (`0.5 // 0.1 == 4.0`, mais `5 * 0.1 == 0.5`), donc il manque des points du bord du disque. Même risque pour `r = int(threshold // step)` sur les voisinages.
+- Correctif envisagé : longueurs en entiers au 10⁻⁶ µm (= `COORD_PRECISION` de Pulser), décisions sur distances² entières, flottants seulement en sortie. Ouvert : où convertir (`LayoutParameters` ou `Layout`), traitement des paramètres non multiples de 10⁻⁶. Limite : le test de rayon de Pulser est sans tolérance. L'oracle des tests devra passer en exact (`Fraction`).
+- Son choix : merger `xxx-create-layout` avec le bug connu, correctif sur une nouvelle branche. Le cas qui échoue est marqué `xfail(strict=True)` dans `test_grid_completeness` (à retirer avec le correctif).
