@@ -104,3 +104,11 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 - `bfs` : testé sans doublon et exhaustif (référence : `qc.data`). L'ordre topologique n'est pas garanti par l'implémentation actuelle et n'est pas testé. Reporté, sans doute à l'étape suivante.
 - `to_dot_string` : testé contre le DAG (nœuds, arêtes, arêtes pointillées qubit → première porte). Arêtes comptées en multiensemble : une arête par fil de qubit, donc deux CZ successives sur la même paire donnent deux flèches. Ce comportement est figé par le test, à revoir s'il ne convient pas.
 - Restent : des tests pour `PySAT`, et `SolverParameters.pulser_parameters`, que personne ne lit.
+
+### 2026-11-04
+- Tests de `Layout` sur `xxx-create-layout` (branche partie de `main`). `layout.py` importait `PulserParameters`, qui n'existe que sur `8-sat-…`. La méthode s'appelle `convert_to_register`, pas `convert_to_pulser`.
+- Construire `Layout` sans config pour les tests. Pistes vues : plusieurs constructeurs via `@classmethod`, ou une `@dataclass` avec `__post_init__`.
+- Son choix : `LayoutParameters` (`parameters/layout_parameters.py`), une `@dataclass` simple (step, max_radius, min_dist, threshold) que `Layout` reçoit. Invariants géométriques dans `__post_init__`. La conversion `from_pulser` sera dans `LayoutParameters` (`layout/` dépend de `parameters/`), et `threshold ≤ R_b(Ω)` reste dans `PulserParameters`.
+- Son idée : une hiérarchie Pulser > Layout > Solver, comprise comme une règle de dépendance (un niveau n'importe que ceux au-dessus de lui). Il s'agit de composition et de conversion, pas d'héritage.
+- `PulserParameters` et `config.toml` restent sur `8-sat-…` (reset volontaire ici). `from_pulser` est commenté en attendant la fusion.
+- Validation de `LayoutParameters` : `step`, `max_radius` et `min_dist` strictement positifs, et `threshold ≥ min_dist`. Relu et exécuté, ruff au vert.
