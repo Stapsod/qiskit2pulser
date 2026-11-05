@@ -165,3 +165,4 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
   - les canaux sont déclarés à leur première utilisation.
 - `DAG.topological` (Kahn) a été ajouté, car le `bfs` sortait `cz1` avant ses prédécesseurs. Il est testé.
 - Vérifié de bout en bout dans l'émulateur : erreur < 3e-5 sur les circuits aléatoires, et la CNOT comme l'état de Bell construits avec la CZ sont corrects. La formalisation `pulses.typ` est à jour.
+- Prochaine séance, à sa demande : nettoyer `__init__.py`. Restent aussi : le seuil CZ (la démo place sa CZ à 10,2 µm, soit ≈ 20 % d'erreur), le correctif des flottants de `Layout`, et la vérification par l'émulateur, qui n'est pas dans la testsuite.

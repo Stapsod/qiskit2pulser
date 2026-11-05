@@ -2,7 +2,6 @@ import argparse
 import subprocess
 import tempfile
 
-from pulser import DigitalAnalogDevice, Sequence
 from qiskit import QuantumCircuit
 
 from qiskit2pulser.backend.pulser_backend import PulserBackend
