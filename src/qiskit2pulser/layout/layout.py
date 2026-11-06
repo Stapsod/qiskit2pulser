@@ -1,7 +1,5 @@
 import math
 
-from pulser import Register
-
 from qiskit2pulser.parameters.layout_parameters import LayoutParameters
 
 
