@@ -1,12 +1,11 @@
 import subprocess
 import tempfile
 
-from qiskit2pulser.backend.pulser_backend import PulserBackend
+from qiskit2pulser.backend.backend_factory import make_backend, make_backend_parameters
 from qiskit2pulser.DAG.qiskit_to_dag import QC_to_DAG
 from qiskit2pulser.layout.layout import Layout
 from qiskit2pulser.parameters.compiler_parameters import CompilerParameters
 from qiskit2pulser.parameters.layout_parameters import LayoutParameters
-from qiskit2pulser.parameters.pulser_parameters import PulserParameters
 from qiskit2pulser.parameters.solver_parameters import SolverParameters
 from qiskit2pulser.solvers.solver_factory import make_solver
 from qiskit2pulser.utils.compiler_result import CompilerResult
@@ -15,7 +14,7 @@ from qiskit2pulser.utils.compiler_result import CompilerResult
 class Compiler:
     def __init__(self, parameters: CompilerParameters):
         self.parameters = parameters
-        self.backend_parameters = PulserParameters(self.parameters.config_path)
+        self.backend_parameters = make_backend_parameters(self.parameters.config_path)
         self.layout_parameters = LayoutParameters.from_pulser_parameters(
             self.backend_parameters
         )
@@ -70,7 +69,7 @@ class Compiler:
             )
         positions = self.layout.get_positions(self.solver_positions)
         self.backend_parameters.add_positions(positions)
-        self.backend = PulserBackend(self.backend_parameters)
+        self.backend = make_backend(self.backend_parameters)
         self.backend.build(self.dag)
 
     def build(self):
