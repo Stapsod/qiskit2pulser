@@ -2,8 +2,8 @@ from math import pi
 
 from pulser import BlackmanWaveform, Pulse, Register, Sequence
 
-from qiskit2pulser.DAG.DAG import DAG, Node
 from qiskit2pulser.backend.backend import Backend
+from qiskit2pulser.DAG.DAG import DAG, Node
 from qiskit2pulser.parameters.pulser_parameters import PulserParameters
 from qiskit2pulser.utils.compiler_result import CompilerResult
 from qiskit2pulser.utils.contracts import CZ, Contract, R, Rz
