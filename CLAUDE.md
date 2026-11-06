@@ -166,3 +166,18 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 - `DAG.topological` (Kahn) a été ajouté, car le `bfs` sortait `cz1` avant ses prédécesseurs. Il est testé.
 - Vérifié de bout en bout dans l'émulateur : erreur < 3e-5 sur les circuits aléatoires, et la CNOT comme l'état de Bell construits avec la CZ sont corrects. La formalisation `pulses.typ` est à jour.
 - Prochaine séance, à sa demande : nettoyer `__init__.py`. Restent aussi : le seuil CZ (la démo place sa CZ à 10,2 µm, soit ≈ 20 % d'erreur), le correctif des flottants de `Layout`, et la vérification par l'émulateur, qui n'est pas dans la testsuite.
+
+### 2026-11-06
+- `config.toml` : `threshold = 6.0` (≈ 1 % d'erreur CZ d'après la loi mesurée).
+- Refacto de `__init__.py` sur `xxx-clean-init`. Son choix : une classe `Qiskit2Pulser` (`compiler/qiskit2pulser.py`), avec des étapes publiques (`convert_to_DAG`, `solve_positions`, `convert_to_backend`, `execute_backend`, `end2end`) gardées par des vérifications d'ordre, et `CompilerParameters` (`parameters/compiler_parameters.py`).
+- Relecture, exécutée : testsuite et démo inchangées (15 220 ns). Points relevés :
+  - la `Sequence` n'est ni renvoyée ni exposée par le compilateur ;
+  - un second `execute_backend` double la séquence (30 440 ns) ;
+  - `CompilerParameters` exige un `argparse.Namespace` ;
+  - ruff : 2 erreurs, dont du code mort dans `convert_to_DAG` ;
+  - la démo n'affiche plus le circuit, alors que le README l'annonce.
+- Son objectif : pouvoir ajouter d'autres backends, sans Pulser dans `__init__.py`. Sa piste, pas tranchée : exécuter directement et renvoyer une bitstring.
+- Points relevés : il faut des comptages sur N shots, pas une bitstring ; l'émulation est limitée à peu de qubits (3 niveaux par atome) ; l'ordre des bits doit être normalisé. Proposé, pas tranché : une classe mère `Backend` et un `make_backend`, sur le modèle de `Solver`, avec `build(dag)` et `run(shots)`.
+- Couplage relevé : `compiler/qiskit2pulser.py` importe Pulser, `Layout` et le SAT. Placement propre aux atomes neutres, donc à déplacer derrière le backend si on veut d'autres architectures.
+- Son choix : pour l'instant, on ne traite que la fin de la chaîne (exécution sur le backend), avec le même système que `Solver` (classe mère + factory). Placement derrière le backend : reporté.
+- Résultat d'exécution, proposé, pas tranché : `counts`, `shots`, nom du backend et `metadata` propres au backend. Comptages plutôt que probabilités (qui s'en déduisent). Tous les qubits mesurés, ordre des bits fixé par le contrat. Pas d'état final dans le contrat commun.
