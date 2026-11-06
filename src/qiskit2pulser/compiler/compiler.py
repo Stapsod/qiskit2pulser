@@ -11,7 +11,7 @@ from qiskit2pulser.parameters.solver_parameters import SolverParameters
 from qiskit2pulser.solvers.solver_factory import make_solver
 
 
-class Qiskit2Pulser:
+class Compiler:
     def __init__(self, parameters: CompilerParameters):
         self.parameters = parameters
         self.pulser_parameters = PulserParameters(self.parameters.config_path)
