@@ -25,4 +25,4 @@ def main() -> None:
     args = parser.parse_args()
     compiler_parameters = CompilerParameters(demo_circuit(), "config.toml", args)
     compiler = Compiler(compiler_parameters)
-    compiler.end2end()
+    compiler.build()
