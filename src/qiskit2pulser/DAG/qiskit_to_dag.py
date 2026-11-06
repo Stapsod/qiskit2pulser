@@ -1,9 +1,9 @@
 from qiskit import QuantumCircuit
 
 from qiskit2pulser.DAG.DAG import DAG
-from qiskit2pulser.DAG.Gate import Gate, Gate_CZ, Gate_X, Gate_Y, Gate_Z
+from qiskit2pulser.DAG.Gate import Gate, Gate_CZ, Gate_H, Gate_X, Gate_Y, Gate_Z
 
-_gate_types = {"x": Gate_X, "y": Gate_Y, "z": Gate_Z, "cz": Gate_CZ}
+_gate_types = {"x": Gate_X, "y": Gate_Y, "z": Gate_Z, "h": Gate_H, "cz": Gate_CZ}
 
 
 def get_gate_type(name: str) -> type[Gate]:

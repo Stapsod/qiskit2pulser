@@ -4,6 +4,8 @@ import tempfile
 
 from qiskit import QuantumCircuit
 
+from qiskit2pulser.backend.pulser_backend import PulserBackend
+
 
 def demo_circuit() -> QuantumCircuit:
     qc = QuantumCircuit(3)
@@ -63,5 +65,9 @@ def main() -> None:
         if solver.solve() is False:
             raise RuntimeError("aucun placement des atomes trouvé")
         positions = solver.get_solution()
-    register = layout.convert_to_register(positions)
-    register.draw()
+    positions = layout.get_positions(positions)
+
+    backend = PulserBackend(pulser_parameters, positions)
+    sequence = backend.build(dag)
+    print("=== Sequence ===")
+    print(f"durée : {sequence.get_duration()} ns")

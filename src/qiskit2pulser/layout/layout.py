@@ -1,7 +1,5 @@
 import math
 
-from pulser import Register
-
 from qiskit2pulser.parameters.layout_parameters import LayoutParameters
 
 
@@ -69,8 +67,8 @@ class Layout:
             (p, q) for p in range(self.nb_points) for q in self._too_close[p] if p < q
         ]
 
-    def convert_to_register(self, positions: list[int]) -> Register:
-        dic = {}
-        for i in range(len(positions)):
-            dic[f"q{i}"] = self.coordinates(positions[i])
-        return Register(dic)
+    def get_positions(self, pos: list[int]) -> list[tuple[float, float]]:
+        positions = []
+        for i in range(len(pos)):
+            positions.append(self.coordinates(pos[i]))
+        return positions

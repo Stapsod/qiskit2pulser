@@ -1,11 +1,14 @@
 [pulser]
-# Rabi frequency of the CZ pulses (rad/µs), at most 2π·10 on DigitalAnalogDevice
+# Peak Rabi frequency of the CZ pulses (rad/µs), sets the blockade radius, at most 2π·10 on DigitalAnalogDevice
 omega = 2.0
+# Peak Rabi frequency of the single-qubit (raman) pulses (rad/µs), only sets
+# their speed. Defaults to the max amplitude of raman_local if omitted.
+# omega_raman = 20.0
 # Step of the candidate grid (µm)
 step = 2.0
 # Max distance between the two atoms of a CZ (µm), at most R_b(omega).
 # Defaults to R_b(omega) if omitted.
-# threshold = 10.0
+threshold = 6.0
 
 [SAT_solver]
 type = "pysat"
