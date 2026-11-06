@@ -1,10 +1,9 @@
 import argparse
-import subprocess
-import tempfile
 
 from qiskit import QuantumCircuit
 
-from qiskit2pulser.backend.pulser_backend import PulserBackend
+from qiskit2pulser.compiler.qiskit2pulser import Qiskit2Pulser
+from qiskit2pulser.parameters.compiler_parameters import CompilerParameters
 
 
 def demo_circuit() -> QuantumCircuit:
@@ -17,14 +16,6 @@ def demo_circuit() -> QuantumCircuit:
     return qc
 
 
-def show_dot(dot: str) -> None:
-    with tempfile.NamedTemporaryFile(prefix="dag_", suffix=".png", delete=False) as f:
-        png = f.name
-    subprocess.run(["dot", "-Tpng", "-o", png], input=dot, text=True, check=True)
-    subprocess.Popen(["feh", png])
-    print(f"Graphe ouvert : {png}")
-
-
 def main() -> None:
     parser = argparse.ArgumentParser(prog="qiskit2pulser")
     parser.add_argument("dot_file", nargs="?", help="écrit le DOT dans ce fichier")
@@ -32,42 +23,6 @@ def main() -> None:
         "--show", action="store_true", help="affiche le graphe (Graphviz)"
     )
     args = parser.parse_args()
-
-    from qiskit2pulser.DAG.qiskit_to_dag import QC_to_DAG
-    from qiskit2pulser.layout.layout import Layout
-    from qiskit2pulser.parameters.layout_parameters import LayoutParameters
-    from qiskit2pulser.parameters.pulser_parameters import PulserParameters
-    from qiskit2pulser.parameters.solver_parameters import SolverParameters
-    from qiskit2pulser.solvers.solver_factory import make_solver
-
-    qc = demo_circuit()
-    print("=== Circuit Qiskit ===")
-    print(qc.draw())
-
-    dag = QC_to_DAG(qc)
-    print("=== DAG ===")
-    print("entrées :", [n.name for n in dag.entries])
-
-    dot = dag.to_dot_string()
-    if args.dot_file:
-        with open(f"out/{args.dot_file}", "w") as f:
-            f.write(dot)
-        print(f"DOT écrit dans out/{args.dot_file}")
-
-    if args.show:
-        show_dot(dot)
-
-    config_path = "config.toml"
-    pulser_parameters = PulserParameters(config_path)
-    layout = Layout(LayoutParameters.from_pulser_parameters(pulser_parameters))
-    solver_parameters = SolverParameters.from_config(config_path, layout, dag)
-    with make_solver(solver_parameters) as solver:
-        if solver.solve() is False:
-            raise RuntimeError("aucun placement des atomes trouvé")
-        positions = solver.get_solution()
-    positions = layout.get_positions(positions)
-
-    backend = PulserBackend(pulser_parameters, positions)
-    sequence = backend.build(dag)
-    print("=== Sequence ===")
-    print(f"durée : {sequence.get_duration()} ns")
+    compiler_parameters = CompilerParameters(demo_circuit(), "config.toml", args)
+    compiler = Qiskit2Pulser(compiler_parameters)
+    compiler.end2end()
