@@ -181,3 +181,4 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 - `CompilerResult` : `counts`, `shots`, `backend_name`, `metadata`.
 - Son choix : les positions passent par les paramètres (`PulserParameters.add_positions`), et le backend ne reçoit plus que `parameters`.
 - Création du backend dans `Compiler`, son choix : section `[backend]` de la config, `make_backend_parameters(config_path)` à côté de `make_backend`, `BackendParameters` dans son propre fichier avec `positions`/`add_positions`. `LayoutParameters.from_pulser_parameters` reste le seul lien avec Pulser tant que le placement n'est pas derrière le backend.
+- Avant de merger `18-add-modularity-to-handle-multiple-backend` : remplir `CompilerResult` et exécuter les séquences dans `PulserBackend.run`, qui renvoie encore un résultat vide.
