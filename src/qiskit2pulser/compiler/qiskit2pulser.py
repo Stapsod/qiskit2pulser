@@ -1,8 +1,8 @@
 import subprocess
 import tempfile
 
-from qiskit2pulser.DAG.qiskit_to_dag import QC_to_DAG
 from qiskit2pulser.backend.pulser_backend import PulserBackend
+from qiskit2pulser.DAG.qiskit_to_dag import QC_to_DAG
 from qiskit2pulser.layout.layout import Layout
 from qiskit2pulser.parameters.compiler_parameters import CompilerParameters
 from qiskit2pulser.parameters.layout_parameters import LayoutParameters
@@ -50,8 +50,6 @@ class Qiskit2Pulser:
 
         if self.parameters.show_dag:
             self._show_dot(dot)
-            if self.parameters.show_dag:
-                self.dag
 
     def solve_positions(self):
         if self.solver_parameters is None:
