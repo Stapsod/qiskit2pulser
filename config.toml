@@ -1,3 +1,6 @@
+[backend]
+type = "pulser"
+
 [pulser]
 # Peak Rabi frequency of the CZ pulses (rad/µs), sets the blockade radius, at most 2π·10 on DigitalAnalogDevice
 omega = 2.0
