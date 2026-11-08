@@ -12,7 +12,7 @@ def get_gate_type(name: str) -> type[Gate]:
     return _gate_types[name.lower()]
 
 
-def QC_to_DAG(qc: QuantumCircuit) -> DAG:
+def QC_to_DAG(qc: QuantumCircuit, apply_opti: bool = True) -> DAG:
     data = qc.data
     result = DAG(qc.num_qubits)
 
