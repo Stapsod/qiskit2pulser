@@ -182,3 +182,13 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 - Son choix : les positions passent par les paramètres (`PulserParameters.add_positions`), et le backend ne reçoit plus que `parameters`.
 - Création du backend dans `Compiler`, son choix : section `[backend]` de la config, `make_backend_parameters(config_path)` à côté de `make_backend`, `BackendParameters` dans son propre fichier avec `positions`/`add_positions`. `LayoutParameters.from_pulser_parameters` reste le seul lien avec Pulser tant que le placement n'est pas derrière le backend.
 - Avant de merger `18-add-modularity-to-handle-multiple-backend` : remplir `CompilerResult` et exécuter les séquences dans `PulserBackend.run`, qui renvoie encore un résultat vide.
+
+### 2026-11-08
+- Vérifié dans Pulser 1.9.1, pour `PulserBackend.run` :
+  - `sample_final_state` met q0 à gauche, donc à l'inverse de Qiskit (q0 à droite) ;
+  - sans `measure`, une séquence raman + rydberg est échantillonnée en base digital ;
+  - un second `measure` lève `RuntimeError`, et la séquence n'est plus modifiable après `measure` ;
+  - l'émulateur refuse une séquence sans impulsion (`ValueError`), ce qui arrive pour un circuit sans porte ou avec seulement des Z.
+- `PulserBackend.run` : bitstrings inversées pour suivre l'ordre de Qiskit.
+- Son choix : `measure` passe à la fin de `build`, et `build` vérifie d'abord que `self.sequence` vaut `None` (un second `build` lève une erreur ou ne fait rien).
+- Ouvert : un circuit avec seulement des CZ plante à l'émulation (`measure("digital")` sur une simulation `ground-rydberg`).
