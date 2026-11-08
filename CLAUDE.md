@@ -203,3 +203,7 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 - Relevé : `QutipEmulator` est déprécié depuis Pulser 1.9 (`QutipBackendV2` à la place).
 - Tests e2e : circuit 1 = état de Bell (H, H, CZ, H), `test_circuit` paramétré sur les indices. Sans la CZ, la distance vaut 0,5 pour une tolérance de 0,073 : le test détecte bien une CZ sans effet.
 - Circuits aléatoires e2e écartés (son choix : overkill). À la place, deux circuits écrits à la main : H Z H (effet de la Z en superposition) et GHZ à 3 qubits (deux CZ en chaîne).
+- Circuit avec seulement une Z : forcer le canal ne suffit pas, `raman_local` est déjà déclaré par la branche `Rz`. L'émulateur refuse la séquence sans impulsion (`ValueError`), et un `delay` échoue aussi (`meas_basis`).
+- Son choix : sans impulsion (`sequence.get_duration() == 0`), `run` renvoie `{"0" * n: shots}` sans émuler. Couvre aussi un circuit sans porte (à n > 0).
+- Circuit avec seulement des CZ : sans impulsion `raman`, la simulation est à 2 niveaux et refuse `measure("digital")`, même avec `raman_local` déclaré. `measure("ground-rydberg")` passe et donne `{'00': 1000}`.
+- Son choix : le raccourci de `run` s'élargit à « aucune impulsion `raman` » (Z seules, CZ seules, Z + CZ, sans porte). Pas de `ground-rydberg`. Limite : à revoir si le bruit est simulé un jour. Implémenté par lui sur `xxx-fix-degenerate-circuits-emulation`, les deux `xfail` sont retirés.
