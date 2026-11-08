@@ -196,4 +196,10 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 - Sa piste, non tranchée : une liste d'actions propre à chaque backend (pour Pulser, le placement). Il faut alors une interface d'exécution commune et un contexte partagé (les positions passent d'une action à l'autre).
 - Alternative, non tranchée : le placement dans `PulserBackend.build`. Critère : quelqu'un hors du backend doit-il voir les étapes ?
 - Les deux pistes sont reportées : pas d'autre backend prévu avant un moment.
-- Sa piste pour la testsuite : comparer les `CompilerResult` de Pulser à Qiskit, avec une tolérance. Tolérance à fixer selon n, les shots et le nombre de CZ (biais physique ≈ 1 % par CZ à 6 µm).
+- Sa piste pour la testsuite : comparer les `CompilerResult` de Pulser à Qiskit, avec une tolérance. Comparaison implémentée (`tests/end2end/`) : distance en variation totale ≤ 2 × ½√(2ⁿ/N) + 1 % par CZ. Le terme de bruit donne ≈ 0,5 % de fausses alertes à n = 1 (cas uniforme, le pire).
+- Tests e2e : `get_qc_and_proba(i)` sert à ajouter des circuits. Pour l'instant, seul le circuit de démo y est : il n'a pas de superposition, donc il ne détecte pas une CZ sans effet (il faut des H autour). Le 1 % par CZ est lié à `threshold = 6.0`. Tirage non seedé.
+- Reportés, son choix : les circuits avec seulement une Z ou seulement des CZ, couverts par deux tests `xfail(strict=True)` dans `tests/backend/`.
+- `CompilerParameters` : le constructeur prend `dot_file_path` et `show_dag` (défauts `None` et `False`), et `from_args` fait le lien avec `argparse`.
+- Relevé : `QutipEmulator` est déprécié depuis Pulser 1.9 (`QutipBackendV2` à la place).
+- Tests e2e : circuit 1 = état de Bell (H, H, CZ, H), `test_circuit` paramétré sur les indices. Sans la CZ, la distance vaut 0,5 pour une tolérance de 0,073 : le test détecte bien une CZ sans effet.
+- Circuits aléatoires e2e écartés (son choix : overkill). À la place, deux circuits écrits à la main : H Z H (effet de la Z en superposition) et GHZ à 3 qubits (deux CZ en chaîne).

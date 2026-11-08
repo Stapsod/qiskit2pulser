@@ -23,7 +23,9 @@ def main() -> None:
         "--show", action="store_true", help="affiche le graphe (Graphviz)"
     )
     args = parser.parse_args()
-    compiler_parameters = CompilerParameters(demo_circuit(), "config.toml", args)
+    compiler_parameters = CompilerParameters.from_args(
+        demo_circuit(), "config.toml", args
+    )
     compiler = Compiler(compiler_parameters)
     compiler.build()
     result = compiler.run(1000)
