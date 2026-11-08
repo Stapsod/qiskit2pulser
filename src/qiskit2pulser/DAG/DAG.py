@@ -103,3 +103,37 @@ class DAG:
 
         res += decl + edges + "}\n"
         return res
+
+    def reduce_unitary_gate(self) -> None:
+        for qi in range(self.num_qubits):
+            kept: list[Node] = []
+            n = self.first_gate[qi]
+            while n is not None:
+                suc = n.successors.get(qi)
+                if (
+                    kept
+                    and len(n.gate.qubits) == 1
+                    and kept[-1].gate.symbol == n.gate.symbol
+                ):
+                    self._remove_pair(kept.pop(), suc, kept[-1] if kept else None, qi)
+                else:
+                    kept.append(n)
+                n = suc
+
+    def _remove_pair(
+        self, first: Node, after: Node | None, before: Node | None, q: int
+    ) -> None:
+        if before is not None:
+            if after is not None:
+                before.successors[q] = after
+            else:
+                del before.successors[q]
+        else:
+            self.first_gate[q] = after
+            self.entries.remove(first)
+            if after is not None and all(
+                self.first_gate[w] is after for w in after.gate.qubits
+            ):
+                self.entries.append(after)
+        if after is None:
+            self.last_gate[q] = before

@@ -21,4 +21,7 @@ def QC_to_DAG(qc: QuantumCircuit, apply_opti: bool = True) -> DAG:
             [qc.find_bit(q).index for q in e.qubits], e.operation.params
         )
         result.add_gate(g)
+
+    if apply_opti:
+        result.reduce_unitary_gate()
     return result
