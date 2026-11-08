@@ -1,5 +1,6 @@
 from pathlib import Path
 import numpy as np
+import pytest
 
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import Statevector
@@ -45,12 +46,21 @@ def get_qc_and_proba(i: int) -> tuple[QuantumCircuit, np.ndarray]:
         qc.x(2)
         qc.y(0)
         return qc, get_probas(qc)
+    elif i == 1:
+        # Bell state: without the CZ, qubit 1 would simply return to |0>
+        qc = QuantumCircuit(2)
+        qc.h(0)
+        qc.h(1)
+        qc.cz(0, 1)
+        qc.h(1)
+        return qc, get_probas(qc)
     else:
         raise RuntimeError("E2E_pulser.demo_circuit unknown circuit index")
 
 
-def test_circuit():
-    qc, probas = get_qc_and_proba(0)
+@pytest.mark.parametrize("index", [0, 1])
+def test_circuit(index: int):
+    qc, probas = get_qc_and_proba(index)
     compiler_parameters = CompilerParameters(qc, CONFIG)
     compiler = Compiler(compiler_parameters)
     compiler.build()
