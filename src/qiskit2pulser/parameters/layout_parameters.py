@@ -18,4 +18,8 @@ class LayoutParameters:
 
     @classmethod
     def from_pulser_parameters(cls, params: PulserParameters) -> "LayoutParameters":
+        if type(params) is not PulserParameters:
+            raise RuntimeError(
+                "LayoutParameters.from_pulser_parameters: parameters used needs to be of type PulserParameters"
+            )
         return cls(params.step, params.max_radius, params.min_dist, params.threshold)
