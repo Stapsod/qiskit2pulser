@@ -1,6 +1,5 @@
 from pathlib import Path
 
-import pytest
 from qiskit import QuantumCircuit
 
 from qiskit2pulser.backend.backend_factory import make_backend, make_backend_parameters
