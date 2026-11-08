@@ -80,6 +80,16 @@ class PulserBackend(Backend):
             raise RuntimeError(
                 "PulserBackend.run: The backend must be build before to be run"
             )
+        if (
+            "raman_local" not in self.sequence.declared_channels
+            or self.sequence.get_duration("raman_local") == 0
+        ):
+            return CompilerResult(
+                {"".join(["0" for _ in range(len(self.qubits_id))]): shots},
+                shots,
+                "pulser",
+                {},
+            )
         res = QutipEmulator.from_sequence(self.sequence).run()
         dic = {
             k[::-1]: v for k, v in dict(res.sample_final_state(N_samples=shots)).items()
