@@ -1,28 +1,33 @@
 from math import pi
 
 from pulser import BlackmanWaveform, Pulse, Register, Sequence
+from pulser_simulation import QutipEmulator
 
+from qiskit2pulser.backend.backend import Backend
 from qiskit2pulser.DAG.DAG import DAG, Node
 from qiskit2pulser.parameters.pulser_parameters import PulserParameters
+from qiskit2pulser.utils.compiler_result import CompilerResult
 from qiskit2pulser.utils.contracts import CZ, Contract, R, Rz
 
 
-class PulserBackend:
+class PulserBackend(Backend):
     parameters: PulserParameters
-    register: Register | None = None
+    register: Register
     sequence: Sequence | None = None
 
-    def __init__(
-        self, parameters: PulserParameters, positions: list[tuple[float, float]]
-    ):
+    def __init__(self, parameters: PulserParameters):
+        self.parameters = parameters
         dic = {}
         self.qubits_id = {}
-        for i in range(len(positions)):
+        if self.parameters.positions is None:
+            raise RuntimeError(
+                "PulserBackend: cannot init a PulserBackend without positions"
+            )
+        for i in range(len(self.parameters.positions)):
             name = f"q{i}"
-            dic[name] = positions[i]
+            dic[name] = self.parameters.positions[i]
             self.qubits_id[i] = name
 
-        self.parameters = parameters
         # Peak amplitude per channel: raman only sets the speed, rydberg also
         # sets the blockade radius, hence the SAT threshold
         self._omega = {
@@ -30,22 +35,29 @@ class PulserBackend:
             "rydberg_local": parameters.omega,
         }
         self.register = Register(dic)
-        self.sequence = Sequence(self.register, parameters.device)
         # Channels are declared on first use: an unused channel changes the
         # simulation basis for nothing
         self._declared: set[str] = set()
 
-    def build(self, dag: DAG) -> Sequence:
+    def build(self, dag: DAG) -> None:
         """Translate every gate of the DAG, each one after its predecessors."""
+
+        if self.sequence is not None:
+            raise RuntimeError("PulserBackend.build: backend must be build only once")
 
         def translate_gate(node: Node):
             for contract in node.gate.contracts():
                 self.translate(contract)
 
+        self.sequence = Sequence(self.register, self.parameters.device)
         dag.topological(translate_gate)
-        return self.sequence
+        self.sequence.measure(basis="digital")
 
     def translate(self, contract: Contract) -> None:
+        if self.sequence is None:
+            raise RuntimeError(
+                "PulserBackend.translate: The backend must be build before to translate any contracts"
+            )
         match contract:
             case R(theta, phi, q):
                 self._rotation(theta, phi, q)
@@ -62,6 +74,17 @@ class PulserBackend:
                 self._add(pi, 0, "rydberg_local", a)
             case _:
                 raise TypeError(f"PulserBackend: unsupported contract {contract}")
+
+    def run(self, shots: int = 1000) -> CompilerResult:
+        if self.sequence is None:
+            raise RuntimeError(
+                "PulserBackend.run: The backend must be build before to be run"
+            )
+        res = QutipEmulator.from_sequence(self.sequence).run()
+        dic = {
+            k[::-1]: v for k, v in dict(res.sample_final_state(N_samples=shots)).items()
+        }
+        return CompilerResult(dic, shots, "pulser", {})
 
     def _rotation(self, theta: float, phi: float, q: int) -> None:
         # A pulse area is positive: R(-theta, phi) = R(theta, phi + pi)

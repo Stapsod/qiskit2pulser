@@ -169,15 +169,31 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 
 ### 2026-11-06
 - `config.toml` : `threshold = 6.0` (≈ 1 % d'erreur CZ d'après la loi mesurée).
-- Refacto de `__init__.py` sur `xxx-clean-init`. Son choix : une classe `Qiskit2Pulser` (`compiler/qiskit2pulser.py`), avec des étapes publiques (`convert_to_DAG`, `solve_positions`, `convert_to_backend`, `execute_backend`, `end2end`) gardées par des vérifications d'ordre, et `CompilerParameters` (`parameters/compiler_parameters.py`).
-- Relecture, exécutée : testsuite et démo inchangées (15 220 ns). Points relevés :
-  - la `Sequence` n'est ni renvoyée ni exposée par le compilateur ;
-  - un second `execute_backend` double la séquence (30 440 ns) ;
-  - `CompilerParameters` exige un `argparse.Namespace` ;
-  - ruff : 2 erreurs, dont du code mort dans `convert_to_DAG` ;
-  - la démo n'affiche plus le circuit, alors que le README l'annonce.
-- Son objectif : pouvoir ajouter d'autres backends, sans Pulser dans `__init__.py`. Sa piste, pas tranchée : exécuter directement et renvoyer une bitstring.
-- Points relevés : il faut des comptages sur N shots, pas une bitstring ; l'émulation est limitée à peu de qubits (3 niveaux par atome) ; l'ordre des bits doit être normalisé. Proposé, pas tranché : une classe mère `Backend` et un `make_backend`, sur le modèle de `Solver`, avec `build(dag)` et `run(shots)`.
-- Couplage relevé : `compiler/qiskit2pulser.py` importe Pulser, `Layout` et le SAT. Placement propre aux atomes neutres, donc à déplacer derrière le backend si on veut d'autres architectures.
-- Son choix : pour l'instant, on ne traite que la fin de la chaîne (exécution sur le backend), avec le même système que `Solver` (classe mère + factory). Placement derrière le backend : reporté.
-- Résultat d'exécution, proposé, pas tranché : `counts`, `shots`, nom du backend et `metadata` propres au backend. Comptages plutôt que probabilités (qui s'en déduisent). Tous les qubits mesurés, ordre des bits fixé par le contrat. Pas d'état final dans le contrat commun.
+- `__init__.py` nettoyé. Son choix : une classe `Compiler` (`compiler/compiler.py`, d'abord nommée `Qiskit2Pulser`) et `CompilerParameters`, qui dépend encore d'un `argparse.Namespace`.
+- Modularité des backends (issue 18), son objectif : pouvoir ajouter d'autres backends, sans Pulser dans `__init__.py`. Pour l'instant, seule la fin de la chaîne est traitée, avec le même système que `Solver` (classe mère + factory).
+- Reporté : placer le SAT et `Layout` derrière le backend. `Compiler` les importe encore, or le placement est propre aux atomes neutres.
+- Exécution directe : sa piste de départ était de renvoyer une bitstring. Il faut plutôt des résultats sur N shots, et garder la compilation seule, car l'émulation est limitée à peu de qubits (3 niveaux par atome).
+- Résultat d'exécution, proposé, pas tranché : `counts`, `shots`, nom du backend et `metadata` propres au backend. Comptages plutôt que probabilités (qui s'en déduisent). Pas d'état final dans le contrat commun.
+- Contrat proposé : tous les qubits mesurés à la fin, bit i = qubit i, ordre de Qiskit (q0 à droite). Ordre de Pulser à vérifier. Les `qc.measure` partiels viendront plus tard.
+- En cours, son début d'implémentation : étapes de `Compiler` rendues privées, `build()` et `run(shot) -> CompilerResult` (`utils/compiler_result.py`), encore vides pour `run` et `CompilerResult`.
+- Restent : l'accès au programme compilé, un second `build` du backend qui double la séquence (`PulserBackend` accumule dans `self.sequence`), une valeur par défaut de `shots` dans la config, et le README, qui annonce encore l'affichage du circuit et du DAG.
+- Système de backends, ses choix : classe mère `Backend` (`build`, `translate`, `run(shots) -> CompilerResult`), `make_backend(parameters)` + dict `available_backend` (`backend/backend_factory.py`), `BackendParameters.type` pour choisir la sous-classe.
+- `CompilerResult` : `counts`, `shots`, `backend_name`, `metadata`.
+- Son choix : les positions passent par les paramètres (`PulserParameters.add_positions`), et le backend ne reçoit plus que `parameters`.
+- Création du backend dans `Compiler`, son choix : section `[backend]` de la config, `make_backend_parameters(config_path)` à côté de `make_backend`, `BackendParameters` dans son propre fichier avec `positions`/`add_positions`. `LayoutParameters.from_pulser_parameters` reste le seul lien avec Pulser tant que le placement n'est pas derrière le backend.
+- Avant de merger `18-add-modularity-to-handle-multiple-backend` : remplir `CompilerResult` et exécuter les séquences dans `PulserBackend.run`, qui renvoie encore un résultat vide.
+
+### 2026-11-08
+- Vérifié dans Pulser 1.9.1, pour `PulserBackend.run` :
+  - `sample_final_state` met q0 à gauche, donc à l'inverse de Qiskit (q0 à droite) ;
+  - sans `measure`, une séquence raman + rydberg est échantillonnée en base digital ;
+  - un second `measure` lève `RuntimeError`, et la séquence n'est plus modifiable après `measure` ;
+  - l'émulateur refuse une séquence sans impulsion (`ValueError`), ce qui arrive pour un circuit sans porte ou avec seulement des Z.
+- `PulserBackend.run` : bitstrings inversées pour suivre l'ordre de Qiskit.
+- Son choix : `measure` passe à la fin de `build`, et `build` vérifie d'abord que `self.sequence` vaut `None` (un second `build` lève une erreur ou ne fait rien).
+- Ouvert : un circuit avec seulement des CZ plante à l'émulation (`measure("digital")` sur une simulation `ground-rydberg`).
+- Modularité, verrou : `Compiler` impose `Layout` + SAT, et `positions` est dans `BackendParameters`.
+- Sa piste, non tranchée : une liste d'actions propre à chaque backend (pour Pulser, le placement). Il faut alors une interface d'exécution commune et un contexte partagé (les positions passent d'une action à l'autre).
+- Alternative, non tranchée : le placement dans `PulserBackend.build`. Critère : quelqu'un hors du backend doit-il voir les étapes ?
+- Les deux pistes sont reportées : pas d'autre backend prévu avant un moment.
+- Sa piste pour la testsuite : comparer les `CompilerResult` de Pulser à Qiskit, avec une tolérance. Tolérance à fixer selon n, les shots et le nombre de CZ (biais physique ≈ 1 % par CZ à 6 µm).

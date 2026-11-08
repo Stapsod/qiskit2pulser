@@ -3,13 +3,16 @@ from pathlib import Path
 
 from pulser.devices import Device, DigitalAnalogDevice
 
+from qiskit2pulser.parameters.backend_parameters import BackendParameters
 
-class PulserParameters:
+
+class PulserParameters(BackendParameters):
     def __init__(
         self,
         config_path: str | Path,
         device: Device = DigitalAnalogDevice,
     ) -> None:
+        self.type = "pulser"
         with open(config_path, "rb") as f:
             config = tomllib.load(f)["pulser"]
         # Device constants (µm, rad/µs, rad.µm^6/µs)

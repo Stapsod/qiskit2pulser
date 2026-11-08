@@ -2,7 +2,7 @@ import argparse
 
 from qiskit import QuantumCircuit
 
-from qiskit2pulser.compiler.qiskit2pulser import Qiskit2Pulser
+from qiskit2pulser.compiler.compiler import Compiler
 from qiskit2pulser.parameters.compiler_parameters import CompilerParameters
 
 
@@ -24,5 +24,7 @@ def main() -> None:
     )
     args = parser.parse_args()
     compiler_parameters = CompilerParameters(demo_circuit(), "config.toml", args)
-    compiler = Qiskit2Pulser(compiler_parameters)
-    compiler.end2end()
+    compiler = Compiler(compiler_parameters)
+    compiler.build()
+    result = compiler.run(1000)
+    print(result)
