@@ -63,4 +63,7 @@ just all            # tous les documents
 
 - [x] Mise en place de l'environnement et de la suite de tests
 - [x] Conversion d'un circuit Qiskit en DAG (portes `x`, `y`, `z`, `cz`), avec export DOT et affichage via Graphviz
-- [ ] Placement des atomes par SAT : en conception (voir `formalisations/SAT/clauses/`)
+- [x] Placement des atomes par SAT : en conception (voir `formalisations/SAT/clauses/`)
+- [x] Ajouter la conversion des portes en impulsion
+- [x] Faire des tests fonctionnels
+- [ ] Faire une premiere passe d'optimisation pour la suppression de porte unitaire etc
