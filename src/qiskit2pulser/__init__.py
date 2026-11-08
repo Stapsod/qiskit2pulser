@@ -26,3 +26,5 @@ def main() -> None:
     compiler_parameters = CompilerParameters(demo_circuit(), "config.toml", args)
     compiler = Compiler(compiler_parameters)
     compiler.build()
+    result = compiler.run(1000)
+    print(result)
