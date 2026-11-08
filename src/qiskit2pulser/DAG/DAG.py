@@ -48,7 +48,7 @@ class DAG:
         for q in gate.qubits:
             self.last_gate[q] = node
 
-    def bfs(self, f):
+    def bfs(self, func):
         gates = set()
 
         queue = deque(self.entries)
@@ -56,7 +56,7 @@ class DAG:
             node = queue.popleft()
             if node.name not in gates:
                 gates.add(node.name)
-                f(node)
+                func(node)
                 for succ in node.successors.values():
                     queue.append(succ)
 
