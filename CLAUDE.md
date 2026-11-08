@@ -192,3 +192,8 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 - `PulserBackend.run` : bitstrings inversées pour suivre l'ordre de Qiskit.
 - Son choix : `measure` passe à la fin de `build`, et `build` vérifie d'abord que `self.sequence` vaut `None` (un second `build` lève une erreur ou ne fait rien).
 - Ouvert : un circuit avec seulement des CZ plante à l'émulation (`measure("digital")` sur une simulation `ground-rydberg`).
+- Modularité, verrou : `Compiler` impose `Layout` + SAT, et `positions` est dans `BackendParameters`.
+- Sa piste, non tranchée : une liste d'actions propre à chaque backend (pour Pulser, le placement). Il faut alors une interface d'exécution commune et un contexte partagé (les positions passent d'une action à l'autre).
+- Alternative, non tranchée : le placement dans `PulserBackend.build`. Critère : quelqu'un hors du backend doit-il voir les étapes ?
+- Les deux pistes sont reportées : pas d'autre backend prévu avant un moment.
+- Sa piste pour la testsuite : comparer les `CompilerResult` de Pulser à Qiskit, avec une tolérance. Tolérance à fixer selon n, les shots et le nombre de CZ (biais physique ≈ 1 % par CZ à 6 µm).
