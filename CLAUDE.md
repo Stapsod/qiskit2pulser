@@ -202,3 +202,4 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 - `CompilerParameters` : le constructeur prend `dot_file_path` et `show_dag` (défauts `None` et `False`), et `from_args` fait le lien avec `argparse`.
 - Relevé : `QutipEmulator` est déprécié depuis Pulser 1.9 (`QutipBackendV2` à la place).
 - Tests e2e : circuit 1 = état de Bell (H, H, CZ, H), `test_circuit` paramétré sur les indices. Sans la CZ, la distance vaut 0,5 pour une tolérance de 0,073 : le test détecte bien une CZ sans effet.
+- Circuits aléatoires e2e écartés (son choix : overkill). À la place, deux circuits écrits à la main : H Z H (effet de la Z en superposition) et GHZ à 3 qubits (deux CZ en chaîne).
