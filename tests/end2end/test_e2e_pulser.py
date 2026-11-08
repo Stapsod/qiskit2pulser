@@ -54,11 +54,29 @@ def get_qc_and_proba(i: int) -> tuple[QuantumCircuit, np.ndarray]:
         qc.cz(0, 1)
         qc.h(1)
         return qc, get_probas(qc)
+    elif i == 2:
+        # H Z H = X: without the Z, the qubit would return to |0>
+        qc = QuantumCircuit(1)
+        qc.h(0)
+        qc.z(0)
+        qc.h(0)
+        return qc, get_probas(qc)
+    elif i == 3:
+        # GHZ state: two chained CZ acting on different pairs of atoms
+        qc = QuantumCircuit(3)
+        qc.h(0)
+        qc.h(1)
+        qc.cz(0, 1)
+        qc.h(1)
+        qc.h(2)
+        qc.cz(1, 2)
+        qc.h(2)
+        return qc, get_probas(qc)
     else:
         raise RuntimeError("E2E_pulser.demo_circuit unknown circuit index")
 
 
-@pytest.mark.parametrize("index", [0, 1])
+@pytest.mark.parametrize("index", [0, 1, 2, 3])
 def test_circuit(index: int):
     qc, probas = get_qc_and_proba(index)
     compiler_parameters = CompilerParameters(qc, CONFIG)
