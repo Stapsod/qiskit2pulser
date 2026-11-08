@@ -32,4 +32,5 @@ def generate_circuit_and_dag(
             gate,
             *rng.sample(range(nb_qubits), num_qubits),
         )
-    return (qc, QC_to_DAG(qc))
+    # The DAG tests compare it to the circuit gate by gate: no optimisation
+    return (qc, QC_to_DAG(qc, apply_opti=False))
