@@ -1,7 +1,7 @@
 from pathlib import Path
+
 import numpy as np
 import pytest
-
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import Statevector
 
