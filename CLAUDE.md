@@ -8,6 +8,7 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 - Mode mentorat : j'explique les concepts et fixe l'objectif de chaque étape. **L'utilisateur écrit le code essentiel**, puis je relis et je débloque. Pas d'implémentation du cœur à sa place, sauf demande explicite. Le boilerplate et la config, ça va.
 - **Les choix techniques lui appartiennent.** Quand je relis, je juge son approche selon ses propres termes : bugs, cas limites, conséquences. Je ne ramène pas ses choix vers ma solution préférée. Les alternatives se proposent, elles ne s'imposent pas.
 - Placement des atomes : aucune piste d'implémentation de ma part, sauf demande explicite (règle qu'il a posée le 2026-10-12).
+- **En fin de séance, j'ajoute la durée de la conversation à la section « Temps passé » (fin du fichier) et je mets le total à jour.**
 - En revue, toujours exécuter le code (un petit script ou les tests) avant de conclure.
 - **Je tiens l'entrée du jour de l'Historique à jour moi-même, dès qu'un choix est pris ou qu'une piste est ouverte ou écartée, sans attendre qu'il le demande.** Quelques puces courtes et techniques : choix, pistes gardées pour plus tard, pistes explorées, questions ouvertes. Pas de récit de séance.
 
@@ -209,3 +210,36 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 - Son choix : le raccourci de `run` s'élargit à « aucune impulsion `raman` » (Z seules, CZ seules, Z + CZ, sans porte). Pas de `ground-rydberg`. Limite : à revoir si le bruit est simulé un jour. Implémenté par lui sur `xxx-fix-degenerate-circuits-emulation`, les deux `xfail` sont retirés.
 - Optimisation (branche `23-…`), son choix : première passe sur les portes à 1 qubit, directement dans le DAG, en parcourant chaque fil de qubit et en comparant chaque porte à la précédente (X X, etc.). `DAG.reduce_unitary_gate`, corrigée par moi à sa demande : pile des portes conservées par fil, recâblage (`successors`, `first_gate`, `last_gate`) et maintien d'`entries`. Activée par `CompilerParameters.apply_opti` (vrai par défaut).
 - Tests e2e de l'opti (`test_optimisation_preserves_results`, à sa demande, écrits par moi) : 7 circuits compilés avec et sans la passe, comparaison des distributions (tolérance × √2, deux échantillons) et nombre exact de portes restantes. Testsuite à ≈ 50 s.
+
+## Temps passé
+
+**Total : ≈ 39,7 h** (au 2026-11-11).
+
+Méthode initiale : union de deux sources, sans compter deux fois les chevauchements.
+- Commits de toutes les branches : deux commits à moins de 2 h d'écart sont dans la même séance, qui compte du premier au dernier commit, + 1 h avant le premier.
+- Conversations Claude Code (`~/.claude/projects/…/*.jsonl`, horodatées, disponibles depuis le 2026-10-10) : deux messages à moins de 30 min d'écart sont dans la même séance.
+
+Borne basse : le travail sur papier hors commit et hors conversation n'est pas compté.
+
+En fin de séance, j'ajoute une ligne avec la durée de la conversation (même découpage à 30 min) et je mets le total à jour.
+
+| Date | Durée |
+|---|---|
+| 2026-10-05 | 1,4 h |
+| 2026-10-06 | 1,0 h |
+| 2026-10-07 | 1,0 h |
+| 2026-10-08 | 2,2 h |
+| 2026-10-10 | 2,4 h |
+| 2026-10-11 | 3,9 h |
+| 2026-10-12 | 0,8 h |
+| 2026-10-17 | 1,7 h |
+| 2026-10-18 | 1,9 h |
+| 2026-10-19 | 2,1 h |
+| 2026-10-24 | 2,2 h |
+| 2026-10-26 | 3,9 h |
+| 2026-10-30 | 1,1 h |
+| 2026-11-04 | 0,5 h |
+| 2026-11-05 | 4,5 h |
+| 2026-11-06 | 3,3 h |
+| 2026-11-08 | 5,7 h |
+| 2026-11-11 | 0,1 h |
