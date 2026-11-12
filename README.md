@@ -49,7 +49,7 @@ from qiskit2pulser.parameters.compiler_parameters import CompilerParameters
 
 compiler = Compiler(CompilerParameters(qc, "config.toml", apply_opti=True))
 compiler.build()
-result = compiler.run(1000)   # CompilerResult(counts=..., shots=1000, ...)
+result = compiler.run(1000)  # CompilerResult(counts=..., shots=1000, ...)
 ```
 
 ## Configuration
