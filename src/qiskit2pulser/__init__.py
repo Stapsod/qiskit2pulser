@@ -9,6 +9,8 @@ from qiskit2pulser.parameters.compiler_parameters import CompilerParameters
 def demo_circuit() -> QuantumCircuit:
     qc = QuantumCircuit(3)
     qc.x(0)
+    qc.x(0)
+    qc.x(0)
     qc.y(1)
     qc.cz(0, 1)
     qc.x(2)

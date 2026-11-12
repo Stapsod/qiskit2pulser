@@ -37,7 +37,7 @@ class Compiler:
         print(f"Graphe ouvert : {png}")
 
     def _convert_to_DAG(self):
-        self.dag = QC_to_DAG(self.parameters.qc)
+        self.dag = QC_to_DAG(self.parameters.qc, self.parameters.apply_opti)
         self.solver_parameters = SolverParameters.from_config(
             self.parameters.config_path, self.layout, self.dag
         )
