@@ -211,6 +211,12 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 - Optimisation (branche `23-…`), son choix : première passe sur les portes à 1 qubit, directement dans le DAG, en parcourant chaque fil de qubit et en comparant chaque porte à la précédente (X X, etc.). `DAG.reduce_unitary_gate`, corrigée par moi à sa demande : pile des portes conservées par fil, recâblage (`successors`, `first_gate`, `last_gate`) et maintien d'`entries`. Activée par `CompilerParameters.apply_opti` (vrai par défaut).
 - Tests e2e de l'opti (`test_optimisation_preserves_results`, à sa demande, écrits par moi) : 7 circuits compilés avec et sans la passe, comparaison des distributions (tolérance × √2, deux échantillons) et nombre exact de portes restantes. Testsuite à ≈ 50 s.
 
+### 2026-11-12
+- Avant de merger la branche 23 : ruff au vert, 717 tests passés + 1 xfail (flottants de `Layout`). `reduce_unitary_gate` vérifiée sur 3000 circuits aléatoires (`entries`, `last_gate`, chaînes, tri topologique, nombre de portes contre une référence « pile par fil ») : aucun écart.
+- README mis à jour (par moi) : pipeline, `config.toml`, exécution (`CompilerResult`), formalisations, structure, avancement. `--show` ouvre le graphe avec `feh`, codé en dur dans `Compiler._show_dot`.
+- Son choix : `apply_opti` ira dans la config (pas de flag CLI `--no-opti`). Nettoyage des paramètres sur une branche dédiée, objectif : centraliser, lire `config.toml` une seule fois (aujourd'hui 3 lectures : `make_backend_parameters`, `PulserParameters`, `SolverParameters.from_config`). Sa piste, non tranchée : tout stocker dans `CompilerParameters`.
+- Points relevés : les « Parameters » mélangent config, constantes du device, valeurs dérivées, options CLI et données produites (`dag`, `layout`, `positions` via `add_positions`). `step`/`threshold` sont dans `[pulser]` alors qu'ils servent au placement. Les tests construisent `LayoutParameters`/`SolverParameters` sans fichier.
+
 ## Temps passé
 
 **Total : ≈ 39,7 h** (au 2026-11-11).
