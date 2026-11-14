@@ -19,8 +19,10 @@ uv sync
 ## Pipeline
 
 ```
-QuantumCircuit ─► DAG ─► optimisation ─► placement des atomes (SAT) ─► Sequence Pulser ─► émulation
+QuantumCircuit ─► DAG ─► optimisation ─► [backend Pulser : placement des atomes (SAT) ─► Sequence] ─► émulation
 ```
+
+`Compiler` ne connaît que les étapes génériques (DAG, optimisation) : le placement est propre aux atomes neutres et se fait dans `PulserBackend.build`.
 
 1. **DAG** : une porte par nœud, un successeur par qubit. Portes supportées : `x`, `y`, `z`, `h`, `cz`.
 2. **Optimisation** : suppression des paires de portes à 1 qubit identiques et adjacentes sur un même fil (`X X`, `H H`…), y compris en cascade (`X Y Y X` → rien).
@@ -33,26 +35,34 @@ QuantumCircuit ─► DAG ─► optimisation ─► placement des atomes (SAT) 
 Compile et exécute (1000 shots) le circuit de démo (`demo_circuit()` dans `src/qiskit2pulser/__init__.py`), puis affiche le `CompilerResult`.
 
 ```bash
-uv run qiskit2pulser                  # compile, émule et affiche les comptages
-uv run qiskit2pulser dag.dot          # écrit aussi le DOT du DAG (optimisé) dans out/dag.dot
-uv run qiskit2pulser --show           # ouvre aussi le graphe du DAG
+uv run qiskit2pulser config.toml                     # compile, émule et affiche les comptages
+uv run qiskit2pulser config.toml --dotfile dag.dot   # écrit aussi le DOT du DAG (optimisé) dans out/dag.dot
+uv run qiskit2pulser config.toml --show              # ouvre aussi le graphe du DAG
 uv run qiskit2pulser --help
 ```
+
+Le chemin de la config est obligatoire.
 
 `--show` nécessite [Graphviz](https://graphviz.org/) (commande `dot`) et le visionneur [feh](https://feh.finalrewind.org/).
 
 Depuis Python :
 
 ```python
+import tomllib
+
 from qiskit2pulser.compiler.compiler import Compiler
 from qiskit2pulser.parameters.compiler_parameters import CompilerParameters
 
-compiler = Compiler(CompilerParameters(qc, "config.toml", apply_opti=True))
+with open("config.toml", "rb") as f:
+    config = tomllib.load(f)
+compiler = Compiler(CompilerParameters(qc, config, apply_opti=True))
 compiler.build()
 result = compiler.run(1000)  # CompilerResult(counts=..., shots=1000, ...)
 ```
 
 ## Configuration
+
+Le fichier est lu une seule fois (dans `main`), et le dict descend jusqu'au backend : `Compiler` ne lit que `[backend]`, et chaque backend prend ses propres sections (`[pulser]` et `[SAT_solver]` pour Pulser).
 
 `config.toml` :
 
@@ -76,6 +86,8 @@ uv run testsuite --ignore tests/end2end   # sans les tests d'émulation (les plu
 ```
 
 Les tests de bout en bout (`tests/end2end/`) comparent les distributions émulées par Pulser à celles de Qiskit, puis les résultats avec et sans optimisation. La tolérance couvre le bruit d'échantillonnage et l'erreur des CZ.
+
+Les tests n'utilisent pas `config.toml` : leur config est écrite en dur dans `tests/config.py` (`make_config()`), car la tolérance des tests de bout en bout dépend de son `threshold` (6 µm).
 
 ## Notes de formalisation
 
@@ -107,6 +119,7 @@ just all               # tous les documents
 ├── formalisations/      # notes Typst
 └── tests/
     ├── testsuite.py     # point d'entrée de `uv run testsuite`
+    ├── config.py        # config des tests (dict en dur)
     ├── DAG/ layout/ solvers/ backend/
     └── end2end/         # comparaison Pulser ↔ Qiskit
 ```
@@ -120,5 +133,6 @@ just all               # tous les documents
 - [x] Tests fonctionnels de bout en bout contre Qiskit
 - [x] Première passe d'optimisation : suppression des portes à 1 qubit identiques adjacentes
 - [ ] Passes d'optimisation supplémentaires
-- [ ] Placement derrière le backend (modularité)
+- [x] Placement derrière le backend (modularité)
+- [x] Config lue une seule fois
 - [ ] Mode analogique
