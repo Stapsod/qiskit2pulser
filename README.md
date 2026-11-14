@@ -60,6 +60,24 @@ compiler.build()
 result = compiler.run(1000)  # CompilerResult(counts=..., shots=1000, ...)
 ```
 
+### Estimation de ressources
+
+Après `build`, sans émulation (donc aussi pour des circuits trop gros pour l'émulateur) :
+
+```python
+estimates = compiler.resource_estimation()  # dict nom → ResourceEstimationResult
+estimates["CZ_count"].value
+```
+
+Chaque estimation porte un nom, une valeur, une unité et une description. Chaque backend renvoie toutes les métriques qu'il calcule à peu de frais. Pour Pulser :
+
+| Nom | Unité | Mesure |
+|---|---|---|
+| `qubits_count` | atomes | nombre d'atomes du registre |
+| `CZ_count` | portes | nombre de CZ (3 impulsions `rydberg_local` chacune) |
+| `raman_count` | impulsions | nombre d'impulsions `raman_local` (les R_z, virtuelles, ne comptent pas) |
+| `duration` | ns | durée totale de la `Sequence` |
+
 ## Configuration
 
 Le fichier est lu une seule fois (dans `main`), et le dict descend jusqu'au backend : `Compiler` ne lit que `[compiler]` et `[backend]`, et chaque backend prend ses propres sections (`[pulser]` et `[SAT_solver]` pour Pulser).
@@ -116,7 +134,7 @@ just all               # tous les documents
 │   ├── solvers/         # placement SAT (classe Solver + PySAT, factory)
 │   ├── backend/         # classe Backend + PulserBackend, factory
 │   ├── parameters/      # paramètres (compiler, layout, solver, backend, pulser)
-│   └── utils/           # contrats (opérations natives), CompilerResult
+│   └── utils/           # contrats (opérations natives), CompilerResult, estimations
 ├── formalisations/      # notes Typst
 └── tests/
     ├── testsuite.py     # point d'entrée de `uv run testsuite`
@@ -133,6 +151,7 @@ just all               # tous les documents
 - [x] Conversion des portes en impulsions
 - [x] Tests fonctionnels de bout en bout contre Qiskit
 - [x] Première passe d'optimisation : suppression des portes à 1 qubit identiques adjacentes
+- [x] Estimation de ressources (atomes, CZ, impulsions, durée)
 - [ ] Passes d'optimisation supplémentaires
 - [x] Placement derrière le backend (modularité)
 - [x] Config lue une seule fois
