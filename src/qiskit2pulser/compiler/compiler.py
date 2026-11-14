@@ -14,7 +14,7 @@ from qiskit2pulser.utils.compiler_result import CompilerResult
 class Compiler:
     def __init__(self, parameters: CompilerParameters):
         self.parameters = parameters
-        self.backend_parameters = make_backend_parameters(self.parameters.config_path)
+        self.backend_parameters = make_backend_parameters(self.parameters.config)
         self.layout_parameters = LayoutParameters.from_pulser_parameters(
             self.backend_parameters
         )
@@ -39,7 +39,7 @@ class Compiler:
     def _convert_to_DAG(self):
         self.dag = QC_to_DAG(self.parameters.qc, self.parameters.apply_opti)
         self.solver_parameters = SolverParameters.from_config(
-            self.parameters.config_path, self.layout, self.dag
+            self.parameters.config["SAT_solver"], self.layout, self.dag
         )
 
         dot = self.dag.to_dot_string()

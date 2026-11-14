@@ -1,6 +1,3 @@
-import tomllib
-from pathlib import Path
-
 from pulser.devices import Device, DigitalAnalogDevice
 
 from qiskit2pulser.parameters.backend_parameters import BackendParameters
@@ -9,12 +6,12 @@ from qiskit2pulser.parameters.backend_parameters import BackendParameters
 class PulserParameters(BackendParameters):
     def __init__(
         self,
-        config_path: str | Path,
+        config: dict[str, dict[str, str]],
         device: Device = DigitalAnalogDevice,
     ) -> None:
         self.type = "pulser"
-        with open(config_path, "rb") as f:
-            config = tomllib.load(f)["pulser"]
+        self.config = config
+        config_pulser = config["pulser"]
         # Device constants (µm, rad/µs, rad.µm^6/µs)
         self.device = device
         self.min_dist = float(device.min_atom_distance)
@@ -25,12 +22,12 @@ class PulserParameters(BackendParameters):
         self.max_omega_raman = device.channels["raman_local"].max_amp
 
         # Configuration choices
-        self.omega = float(config["omega"])
-        self.step = float(config["step"])
+        self.omega = float(config_pulser["omega"])
+        self.step = float(config_pulser["step"])
         if not 0 < self.omega <= self.max_omega:
             raise ValueError(f"omega must be in ]0, {self.max_omega}] rad/µs")
         # Optional in the config: defaults to the fastest raman pulses
-        self.omega_raman = float(config.get("omega_raman", self.max_omega_raman))
+        self.omega_raman = float(config_pulser.get("omega_raman", self.max_omega_raman))
         if not 0 < self.omega_raman <= self.max_omega_raman:
             raise ValueError(
                 f"omega_raman must be in ]0, {self.max_omega_raman}] rad/µs"
@@ -39,7 +36,7 @@ class PulserParameters(BackendParameters):
         # Derived values
         self.blockade_radius = device.rydberg_blockade_radius(self.omega)
         # Optional in the config: defaults to the blockade radius
-        self.threshold = float(config.get("threshold", self.blockade_radius))
+        self.threshold = float(config_pulser.get("threshold", self.blockade_radius))
 
         self._check()
 

@@ -1,6 +1,3 @@
-import tomllib
-from pathlib import Path
-
 from qiskit2pulser.backend.backend import Backend
 from qiskit2pulser.backend.pulser_backend import PulserBackend
 from qiskit2pulser.parameters.backend_parameters import BackendParameters
@@ -10,15 +7,14 @@ available_backend = {"pulser": PulserBackend}
 available_backend_parameters = {"pulser": PulserParameters}
 
 
-def make_backend_parameters(config_path: str | Path) -> BackendParameters:
-    with open(config_path, "rb") as f:
-        backend_type = tomllib.load(f)["backend"]["type"]
+def make_backend_parameters(config: dict[str, dict[str, str]]) -> BackendParameters:
+    backend_type = config["backend"]["type"]
     parameters = available_backend_parameters.get(backend_type)
     if parameters is None:
         raise ValueError(
             f"BackendParameters: the backend {backend_type} is not supported yet. The supported backend are {', '.join(available_backend_parameters.keys())}"
         )
-    return parameters(config_path)
+    return parameters(config)
 
 
 def make_backend(parameters: BackendParameters) -> Backend:
