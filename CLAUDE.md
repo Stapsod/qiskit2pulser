@@ -233,6 +233,7 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 ### 2026-11-14
 - `SolverParameters` dans `PulserBackend`, son choix : un attribut, initialisé à `None` dans `__init__` et construit dans `build` (le DAG n'arrive qu'à ce moment-là). L'alternative, une variable locale passée à `_solve_positions`, est écartée pour l'instant. Nettoyage prévu plus tard.
 - CLI, son choix : `config_path` est un positionnel obligatoire, et le DOT passe par l'option `--dotfile` (toujours écrit dans `out/`). La garde « build une seule fois » passe avant le SAT, `positions`/`add_positions` sont retirés de `BackendParameters`. ruff check est au vert, et la démo tourne avec `qiskit2pulser config.toml`.
+- Testsuite adaptée (par moi, à sa demande) : config de test écrite en dur dans `tests/config.py` (`make_config()`, un dict neuf à chaque appel, `threshold = 6.0` dont dépend `CZ_ERROR` des tests e2e), indépendante de `config.toml`. Les tests de `tests/backend/` ne forcent plus les positions, c'est le SAT qui les choisit. 717 tests passés + 1 xfail.
 
 ## Temps passé
 
