@@ -25,7 +25,7 @@ QuantumCircuit ─► DAG ─► optimisation ─► [backend Pulser : placement
 `Compiler` ne connaît que les étapes génériques (DAG, optimisation) : le placement est propre aux atomes neutres et se fait dans `PulserBackend.build`.
 
 1. **DAG** : une porte par nœud, un successeur par qubit. Portes supportées : `x`, `y`, `z`, `h`, `cz`.
-2. **Optimisation** : suppression des paires de portes à 1 qubit identiques et adjacentes sur un même fil (`X X`, `H H`…), y compris en cascade (`X Y Y X` → rien).
+2. **Optimisation** : suppression des paires de portes à 1 qubit identiques et adjacentes sur un même fil (`X X`, `H H`…), y compris en cascade (`X Y Y X` → rien). Activée par `apply_opti` dans `[compiler]`.
 3. **Placement** : les atomes sont placés sur une grille dans le disque du device (`DigitalAnalogDevice`). Contraintes : distance minimale entre atomes, et les deux atomes de chaque CZ à portée l'un de l'autre. Le solveur est PySAT (CaDiCaL).
 4. **Backend Pulser** : chaque porte se décompose en opérations natives (R(θ, φ), R_z, CZ), traduites en impulsions Blackman (`raman_local` pour les portes à 1 qubit, `rydberg_local` pour la CZ).
 5. **Exécution** : émulation QuTiP sur N shots. Le résultat (`CompilerResult`) donne les comptages, avec les bitstrings dans l'ordre de Qiskit (q0 à droite).
@@ -55,19 +55,20 @@ from qiskit2pulser.parameters.compiler_parameters import CompilerParameters
 
 with open("config.toml", "rb") as f:
     config = tomllib.load(f)
-compiler = Compiler(CompilerParameters(qc, config, apply_opti=True))
+compiler = Compiler(CompilerParameters(qc, config))
 compiler.build()
 result = compiler.run(1000)  # CompilerResult(counts=..., shots=1000, ...)
 ```
 
 ## Configuration
 
-Le fichier est lu une seule fois (dans `main`), et le dict descend jusqu'au backend : `Compiler` ne lit que `[backend]`, et chaque backend prend ses propres sections (`[pulser]` et `[SAT_solver]` pour Pulser).
+Le fichier est lu une seule fois (dans `main`), et le dict descend jusqu'au backend : `Compiler` ne lit que `[compiler]` et `[backend]`, et chaque backend prend ses propres sections (`[pulser]` et `[SAT_solver]` pour Pulser).
 
 `config.toml` :
 
 | Section | Clé | Rôle |
 |---|---|---|
+| `[compiler]` | `apply_opti` | active la passe d'optimisation (`true`/`false`) |
 | `[backend]` | `type` | backend de sortie (`pulser`) |
 | `[pulser]` | `omega` | pic de Rabi des impulsions CZ (rad/µs), fixe le rayon de blocage R_b |
 | | `omega_raman` | pic de Rabi des portes à 1 qubit (optionnel, `max_amp` de `raman_local` par défaut) |
