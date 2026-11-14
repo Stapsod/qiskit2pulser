@@ -5,6 +5,7 @@ from qiskit2pulser.backend.backend_factory import make_backend, make_backend_par
 from qiskit2pulser.DAG.qiskit_to_dag import QC_to_DAG
 from qiskit2pulser.parameters.compiler_parameters import CompilerParameters
 from qiskit2pulser.utils.compiler_result import CompilerResult
+from qiskit2pulser.utils.estimation import ResourceEstimationResult
 
 
 class Compiler:
@@ -55,3 +56,9 @@ class Compiler:
         if self.backend is None:
             raise RuntimeError("Compiler.run: backend is None")
         return self.backend.run(shot)
+
+    def resource_estimation(self) -> dict[str, ResourceEstimationResult]:
+        if self.backend is None:
+            raise RuntimeError("Compiler.resource_estimation: backend is None")
+
+        return self.backend.resource_estimation()
