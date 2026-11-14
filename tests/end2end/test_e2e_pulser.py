@@ -1,5 +1,3 @@
-from pathlib import Path
-
 import numpy as np
 import pytest
 from qiskit import QuantumCircuit
@@ -8,12 +6,12 @@ from qiskit.quantum_info import Statevector
 from qiskit2pulser import Compiler
 from qiskit2pulser.parameters.compiler_parameters import CompilerParameters
 from qiskit2pulser.utils.compiler_result import CompilerResult
+from tests.config import make_config
 
-CONFIG = str(Path(__file__).parents[2] / "config.toml")
 SHOTS = 100
 # Margin over the expected sampling noise, so that the test is not flaky
 SHOT_NOISE_MARGIN = 2
-# Population error of one CZ at the 6 µm threshold of config.toml (pulses.typ)
+# Population error of one CZ at the 6 µm threshold of the test config (pulses.typ)
 CZ_ERROR = 0.01
 
 
@@ -85,7 +83,7 @@ def get_qc_and_proba(i: int) -> tuple[QuantumCircuit, np.ndarray]:
 @pytest.mark.parametrize("index", [0, 1, 2, 3])
 def test_circuit(index: int):
     qc, probas = get_qc_and_proba(index)
-    compiler_parameters = CompilerParameters(qc, CONFIG)
+    compiler_parameters = CompilerParameters(qc, make_config())
     compiler = Compiler(compiler_parameters)
     compiler.build()
     result = compiler.run(1000)
@@ -158,7 +156,7 @@ OPTIMISABLE_CIRCUITS = {
 def compile_and_run(
     qc: QuantumCircuit, apply_opti: bool
 ) -> tuple[Compiler, CompilerResult]:
-    compiler = Compiler(CompilerParameters(qc, CONFIG, apply_opti=apply_opti))
+    compiler = Compiler(CompilerParameters(qc, make_config(), apply_opti=apply_opti))
     compiler.build()
     return compiler, compiler.run(1000)
 
