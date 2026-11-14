@@ -5,7 +5,11 @@ from pulser_simulation import QutipEmulator
 
 from qiskit2pulser.backend.backend import Backend
 from qiskit2pulser.DAG.DAG import DAG, Node
+from qiskit2pulser.layout.layout import Layout
+from qiskit2pulser.parameters.layout_parameters import LayoutParameters
 from qiskit2pulser.parameters.pulser_parameters import PulserParameters
+from qiskit2pulser.parameters.solver_parameters import SolverParameters
+from qiskit2pulser.solvers.solver_factory import make_solver
 from qiskit2pulser.utils.compiler_result import CompilerResult
 from qiskit2pulser.utils.contracts import CZ, Contract, R, Rz
 
@@ -17,16 +21,10 @@ class PulserBackend(Backend):
 
     def __init__(self, parameters: PulserParameters):
         self.parameters = parameters
-        dic = {}
-        self.qubits_id = {}
-        if self.parameters.positions is None:
-            raise RuntimeError(
-                "PulserBackend: cannot init a PulserBackend without positions"
-            )
-        for i in range(len(self.parameters.positions)):
-            name = f"q{i}"
-            dic[name] = self.parameters.positions[i]
-            self.qubits_id[i] = name
+        self.layout_parameters = LayoutParameters.from_pulser_parameters(
+            self.parameters
+        )
+        self.layout = Layout(self.layout_parameters)
 
         # Peak amplitude per channel: raman only sets the speed, rydberg also
         # sets the blockade radius, hence the SAT threshold
@@ -34,16 +32,51 @@ class PulserBackend(Backend):
             "raman_local": parameters.omega_raman,
             "rydberg_local": parameters.omega,
         }
-        self.register = Register(dic)
         # Channels are declared on first use: an unused channel changes the
         # simulation basis for nothing
         self._declared: set[str] = set()
+
+        self.sequence = None
+        self.solver_parameters = None
+        self.positions = None
+        self.qubits_id = {}
+
+    def _solve_positions(self):
+        if self.solver_parameters is None:
+            raise RuntimeError(
+                "PulserBackend._solve_positions: method build must be run before"
+            )
+
+        with make_solver(self.solver_parameters) as solver:
+            if solver.solve() is False:
+                raise RuntimeError("aucun placement des atomes trouvé")
+            solver_positions = solver.get_solution()
+            self.positions = self.layout.get_positions(solver_positions)
+
+    def _init_register(self):
+        if self.positions is None:
+            raise RuntimeError(
+                "PulserBackend._init_register: method _solve_positions must be run before"
+            )
+        dic = {}
+        for i in range(len(self.positions)):
+            name = f"q{i}"
+            dic[name] = self.positions[i]
+            self.qubits_id[i] = name
+        self.register = Register(dic)
 
     def build(self, dag: DAG) -> None:
         """Translate every gate of the DAG, each one after its predecessors."""
 
         if self.sequence is not None:
             raise RuntimeError("PulserBackend.build: backend must be build only once")
+
+        self.solver_parameters = SolverParameters.from_config(
+            self.parameters.config["SAT_solver"], self.layout, dag
+        )
+
+        self._solve_positions()
+        self._init_register()
 
         def translate_gate(node: Node):
             for contract in node.gate.contracts():
@@ -54,7 +87,7 @@ class PulserBackend(Backend):
         self.sequence.measure(basis="digital")
 
     def translate(self, contract: Contract) -> None:
-        if self.sequence is None:
+        if self.qubits_id == {} or self.sequence is None:
             raise RuntimeError(
                 "PulserBackend.translate: The backend must be build before to translate any contracts"
             )

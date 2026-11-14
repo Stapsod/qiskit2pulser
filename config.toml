@@ -1,3 +1,6 @@
+[compiler]
+apply_opti = true
+
 [backend]
 type = "pulser"
 

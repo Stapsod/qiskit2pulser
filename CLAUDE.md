@@ -216,10 +216,31 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 - README mis à jour (par moi) : pipeline, `config.toml`, exécution (`CompilerResult`), formalisations, structure, avancement. `--show` ouvre le graphe avec `feh`, codé en dur dans `Compiler._show_dot`.
 - Son choix : `apply_opti` ira dans la config (pas de flag CLI `--no-opti`). Nettoyage des paramètres sur une branche dédiée, objectif : centraliser, lire `config.toml` une seule fois (aujourd'hui 3 lectures : `make_backend_parameters`, `PulserParameters`, `SolverParameters.from_config`). Sa piste, non tranchée : tout stocker dans `CompilerParameters`.
 - Points relevés : les « Parameters » mélangent config, constantes du device, valeurs dérivées, options CLI et données produites (`dag`, `layout`, `positions` via `add_positions`). `step`/`threshold` sont dans `[pulser]` alors qu'ils servent au placement. Les tests construisent `LayoutParameters`/`SolverParameters` sans fichier.
+- Branche `xxx-clean-parameters`. Son choix : revoir le découpage des paramètres, en commençant par sortir `Layout` de `Compiler`. Comme le SAT dépend de `Layout`, le placement suit, dans `PulserBackend.build`. Une classe mère `ColdAtomsBackend` viendrait seulement s'il y a un second backend à atomes neutres. Conséquences : `Compiler` générique, `positions`/`add_positions` sortent de `BackendParameters`, `[SAT_solver]` lue pour le backend (comment il la reçoit : ouvert), `Compiler` ne voit plus les positions. Avis demandé : découpage plus propre (frontière physique, `step`/`threshold` lus par leur utilisateur) ; vigilance : `build` chargé, positions invisibles hors backend.
+- Ses choix :
+  - lire `config.toml` une seule fois et passer le dict aux différents Parameters, au lieu du chemin ;
+  - un Parameters = tout ce dont l'étape a besoin, pas seulement de la config (donc `layout`/`dag` dans `SolverParameters`, `qc` et options CLI dans `CompilerParameters` sont acceptés).
+- Mis de côté pour l'instant : `apply_opti` en config, `"config.toml"` codé en dur dans `main`.
+- Ouvert pour la lecture unique : qui lit le fichier (`main`, `Compiler` ou `CompilerParameters`), dict entier ou sections (le backend a besoin de `[pulser]` et `[SAT_solver]`), section/clé absente (aujourd'hui `KeyError` brut). `test_pulser_backend` passe un chemin à `make_backend_parameters`, à adapter. Rien n'est codé.
+
+### 2026-11-13
+- Placement déplacé par lui dans `PulserBackend` (`Layout` construit dans `__init__`, SAT dans `build`). La démo plante : `build` lit `self.parameters.config_path`, que `PulserParameters` n'a pas.
+- Sa piste pour la config : `main` lit le fichier, passe le dict complet à `CompilerParameters`, et `Compiler` distribue les clés. Point relevé : si `Compiler` choisit lui-même `[pulser]`/`[SAT_solver]`, il connaît le backend, alors qu'il devait rester générique. Variante : `Compiler` ne lit que `[backend]` et le générique, et transmet le dict à `make_backend_parameters`, qui laisse la sous-classe prendre ses sections.
+- Son choix : la variante. Le dict entier descend jusqu'au backend, et `PulserParameters` prend lui-même `[pulser]` et `[SAT_solver]`.
+- Implémenté par lui : `main` lit le fichier (chemin en 2ᵉ argument positionnel optionnel), `PulserParameters.config` garde le dict, et `PulserBackend.build` construit `SolverParameters` depuis `config["SAT_solver"]`. La démo passe avec `qiskit2pulser x.dot config.toml`. Relevés : un seul argument est pris pour `dot_file` (plantage `None`), le SAT est relancé avant la garde « build une seule fois », `solver_parameters` n'est pas initialisé dans `__init__`, 8 imports inutilisés, `positions`/`add_positions` sont encore dans `BackendParameters`. Tests pas encore adaptés.
+- Restent : corriger ces points, puis adapter les tests (un dict de config écrit en dur dans le conftest au lieu d'un chemin). `apply_opti` en config reste mis de côté.
+
+### 2026-11-14
+- `SolverParameters` dans `PulserBackend`, son choix : un attribut, initialisé à `None` dans `__init__` et construit dans `build` (le DAG n'arrive qu'à ce moment-là). L'alternative, une variable locale passée à `_solve_positions`, est écartée pour l'instant. Nettoyage prévu plus tard.
+- CLI, son choix : `config_path` est un positionnel obligatoire, et le DOT passe par l'option `--dotfile` (toujours écrit dans `out/`). La garde « build une seule fois » passe avant le SAT, `positions`/`add_positions` sont retirés de `BackendParameters`. ruff check est au vert, et la démo tourne avec `qiskit2pulser config.toml`.
+- Testsuite adaptée (par moi, à sa demande) : config de test écrite en dur dans `tests/config.py` (`make_config()`, un dict neuf à chaque appel, `threshold = 6.0` dont dépend `CZ_ERROR` des tests e2e), indépendante de `config.toml`. Les tests de `tests/backend/` ne forcent plus les positions, c'est le SAT qui les choisit. 717 tests passés + 1 xfail.
+- README mis à jour (CLI, flux de la config, `tests/config.py`). Son choix : `apply_opti` passe en config sur cette même branche.
+- `apply_opti`, son choix : dans `[compiler]` de la config, lu par `Compiler` ; retiré de `CompilerParameters` (une seule source). Clé absente : `KeyError` brut, pas de défaut. Les tests e2e modifient le dict de `make_config()`.
+- Type de la config : `dict[str, dict[str, Any]]` (son choix, sans alias). `tomllib` ne garantit que `dict[str, Any]`, le premier niveau en sections est une convention du projet.
 
 ## Temps passé
 
-**Total : ≈ 39,7 h** (au 2026-11-11).
+**Total : ≈ 40,8 h** (au 2026-11-13).
 
 Méthode initiale : union de deux sources, sans compter deux fois les chevauchements.
 - Commits de toutes les branches : deux commits à moins de 2 h d'écart sont dans la même séance, qui compte du premier au dernier commit, + 1 h avant le premier.
@@ -249,3 +270,5 @@ En fin de séance, j'ajoute une ligne avec la durée de la conversation (même d
 | 2026-11-06 | 3,3 h |
 | 2026-11-08 | 5,7 h |
 | 2026-11-11 | 0,1 h |
+| 2026-11-12 | 0,5 h |
+| 2026-11-13 | 0,6 h |

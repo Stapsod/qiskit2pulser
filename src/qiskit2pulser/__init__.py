@@ -1,4 +1,5 @@
 import argparse
+import tomllib
 
 from qiskit import QuantumCircuit
 
@@ -20,15 +21,22 @@ def demo_circuit() -> QuantumCircuit:
 
 def main() -> None:
     parser = argparse.ArgumentParser(prog="qiskit2pulser")
-    parser.add_argument("dot_file", nargs="?", help="écrit le DOT dans ce fichier")
+    parser.add_argument(
+        "config_path",
+        nargs="?",
+        default="config.toml",
+        help="chemin vers la config (config.toml par default)",
+    )
+    parser.add_argument("--dotfile", help="écrit le DOT dans ce fichier")
     parser.add_argument(
         "--show", action="store_true", help="affiche le graphe (Graphviz)"
     )
     args = parser.parse_args()
-    compiler_parameters = CompilerParameters.from_args(
-        demo_circuit(), "config.toml", args
-    )
-    compiler = Compiler(compiler_parameters)
-    compiler.build()
-    result = compiler.run(1000)
+
+    with open(args.config_path, "rb") as f:
+        config = tomllib.load(f)
+        compiler_parameters = CompilerParameters.from_args(demo_circuit(), config, args)
+        compiler = Compiler(compiler_parameters)
+        compiler.build()
+        result = compiler.run(1000)
     print(result)
