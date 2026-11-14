@@ -4,6 +4,7 @@ from qiskit2pulser.DAG.DAG import DAG
 from qiskit2pulser.parameters.backend_parameters import BackendParameters
 from qiskit2pulser.utils.compiler_result import CompilerResult
 from qiskit2pulser.utils.contracts import Contract
+from qiskit2pulser.utils.estimation import ResourceEstimationResult
 
 
 class Backend(ABC):
@@ -19,4 +20,8 @@ class Backend(ABC):
 
     @abstractmethod
     def run(self, shots: int) -> CompilerResult:
+        pass
+
+    @abstractmethod
+    def resource_estimation(self) -> dict[str, ResourceEstimationResult]:
         pass

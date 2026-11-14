@@ -12,12 +12,15 @@ from qiskit2pulser.parameters.solver_parameters import SolverParameters
 from qiskit2pulser.solvers.solver_factory import make_solver
 from qiskit2pulser.utils.compiler_result import CompilerResult
 from qiskit2pulser.utils.contracts import CZ, Contract, R, Rz
+from qiskit2pulser.utils.estimation import ResourceEstimationResult
 
 
 class PulserBackend(Backend):
     parameters: PulserParameters
     register: Register
     sequence: Sequence | None = None
+    cz_count: int = 0
+    raman_count: int = 0
 
     def __init__(self, parameters: PulserParameters):
         self.parameters = parameters
@@ -105,6 +108,7 @@ class PulserBackend(Backend):
                 self._add(pi, 0, "rydberg_local", a)
                 self._add(2 * pi, 0, "rydberg_local", b)
                 self._add(pi, 0, "rydberg_local", a)
+                self.cz_count += 1
             case _:
                 raise TypeError(f"PulserBackend: unsupported contract {contract}")
 
@@ -129,6 +133,39 @@ class PulserBackend(Backend):
         }
         return CompilerResult(dic, shots, "pulser", {})
 
+    def resource_estimation(self) -> dict[str, ResourceEstimationResult]:
+        if self.sequence is None:
+            raise RuntimeError(
+                "PulserBackend.resource_estimation: The backend must be build before to get the resource estimation"
+            )
+        res = {
+            "qubits_count": ResourceEstimationResult(
+                "qubits_count",
+                len(self.qubits_id),
+                "nb qubits",
+                "Number of cold atoms used in the final sequence",
+            ),
+            "CZ_count": ResourceEstimationResult(
+                "CZ_count",
+                self.cz_count,
+                "nb gates",
+                "Number of CZ gates in the final sequence",
+            ),
+            "raman_count": ResourceEstimationResult(
+                "raman_count",
+                self.raman_count,
+                "nb raman pulse",
+                "Number of Raman pulses in the final sequence",
+            ),
+            "duration": ResourceEstimationResult(
+                "duration",
+                int(self.sequence.get_duration()),
+                "ns",
+                "Duration of the final sequence in ns",
+            ),
+        }
+        return res
+
     def _rotation(self, theta: float, phi: float, q: int) -> None:
         # A pulse area is positive: R(-theta, phi) = R(theta, phi + pi)
         if theta < 0:
@@ -137,6 +174,7 @@ class PulserBackend(Backend):
             return
         # Pulser rotates around (cos phase, -sin phase, 0): phase = -phi
         self._add(theta, -phi, "raman_local", q)
+        self.raman_count += 1
 
     def _declare(self, channel: str) -> None:
         if channel not in self._declared:
