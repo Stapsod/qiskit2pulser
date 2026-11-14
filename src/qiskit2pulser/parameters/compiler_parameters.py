@@ -8,7 +8,6 @@ class CompilerParameters:
     config: dict[str, dict[str, Any]]
     dot_file_path: str | None
     show_dag: bool
-    apply_opti: bool
 
     def __init__(
         self,
@@ -16,13 +15,11 @@ class CompilerParameters:
         config: dict[str, dict[str, Any]],
         dot_file_path: str | None = None,
         show_dag: bool = False,
-        apply_opti: bool = True,
     ):
         self.qc = qc
         self.config = config
         self.dot_file_path = dot_file_path
         self.show_dag = show_dag
-        self.apply_opti = apply_opti
 
     @classmethod
     def from_args(cls, qc: QuantumCircuit, config: dict[str, dict[str, Any]], args):

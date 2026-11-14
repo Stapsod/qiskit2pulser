@@ -156,7 +156,9 @@ OPTIMISABLE_CIRCUITS = {
 def compile_and_run(
     qc: QuantumCircuit, apply_opti: bool
 ) -> tuple[Compiler, CompilerResult]:
-    compiler = Compiler(CompilerParameters(qc, make_config(), apply_opti=apply_opti))
+    config = make_config()
+    config["compiler"]["apply_opti"] = apply_opti
+    compiler = Compiler(CompilerParameters(qc, config))
     compiler.build()
     return compiler, compiler.run(1000)
 

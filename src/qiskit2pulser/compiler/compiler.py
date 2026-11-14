@@ -26,7 +26,9 @@ class Compiler:
         print(f"Graphe ouvert : {png}")
 
     def _convert_to_DAG(self):
-        self.dag = QC_to_DAG(self.parameters.qc, self.parameters.apply_opti)
+        self.dag = QC_to_DAG(
+            self.parameters.qc, self.parameters.config["compiler"]["apply_opti"]
+        )
 
         dot = self.dag.to_dot_string()
         if self.parameters.dot_file_path:
