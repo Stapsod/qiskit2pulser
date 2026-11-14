@@ -1,4 +1,7 @@
-def make_config() -> dict[str, dict[str, str | float]]:
+from typing import Any
+
+
+def make_config() -> dict[str, dict[str, Any]]:
     """Config used by the tests, independent of config.toml.
 
     A fresh dict on each call, since the parameters keep a reference to it.

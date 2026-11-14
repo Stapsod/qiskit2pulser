@@ -1,3 +1,5 @@
+from typing import Any
+
 from qiskit2pulser.backend.backend import Backend
 from qiskit2pulser.backend.pulser_backend import PulserBackend
 from qiskit2pulser.parameters.backend_parameters import BackendParameters
@@ -7,7 +9,7 @@ available_backend = {"pulser": PulserBackend}
 available_backend_parameters = {"pulser": PulserParameters}
 
 
-def make_backend_parameters(config: dict[str, dict[str, str]]) -> BackendParameters:
+def make_backend_parameters(config: dict[str, dict[str, Any]]) -> BackendParameters:
     backend_type = config["backend"]["type"]
     parameters = available_backend_parameters.get(backend_type)
     if parameters is None:

@@ -1,3 +1,5 @@
+from typing import Any
+
 from pulser.devices import Device, DigitalAnalogDevice
 
 from qiskit2pulser.parameters.backend_parameters import BackendParameters
@@ -6,7 +8,7 @@ from qiskit2pulser.parameters.backend_parameters import BackendParameters
 class PulserParameters(BackendParameters):
     def __init__(
         self,
-        config: dict[str, dict[str, str]],
+        config: dict[str, dict[str, Any]],
         device: Device = DigitalAnalogDevice,
     ) -> None:
         self.type = "pulser"
