@@ -13,7 +13,7 @@ class DAGChecker:
     dag: DAG
     all_nodes: set[Node] = field(init=False)
     all_successors: set[Node] = field(init=False)
-    gates_per_qubits: list[list[tuple[str, list[int]]]] = field(init=False)
+    gates_per_qubits: list[list[tuple[str, tuple[int, ...]]]] = field(init=False)
 
     def __post_init__(self):
         self.all_nodes = self._get_all_nodes()
@@ -114,7 +114,7 @@ class DAGChecker:
     def _get_gates(self):
         gates = [[] for _ in range(self.qc.num_qubits)]
         for g in self.qc.data:
-            qubits = [self.qc.find_bit(q).index for q in g.qubits]
+            qubits = tuple(self.qc.find_bit(q).index for q in g.qubits)
             for ind in qubits:
                 gates[ind].append((g.operation.name, qubits))
         return gates

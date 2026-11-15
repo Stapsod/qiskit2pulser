@@ -1,15 +1,7 @@
 from qiskit import QuantumCircuit
 
 from qiskit2pulser.DAG.DAG import DAG
-from qiskit2pulser.DAG.Gate import Gate, Gate_CZ, Gate_H, Gate_X, Gate_Y, Gate_Z
-
-_gate_types = {"x": Gate_X, "y": Gate_Y, "z": Gate_Z, "h": Gate_H, "cz": Gate_CZ}
-
-
-def get_gate_type(name: str) -> type[Gate]:
-    if name.lower() not in _gate_types:
-        raise ValueError(f"get_gate_type: the gate {name} is not supported yet")
-    return _gate_types[name.lower()]
+from qiskit2pulser.DAG.logical_gate import LogicalGate, LogicalGateKind
 
 
 def QC_to_DAG(qc: QuantumCircuit, apply_opti: bool = True) -> DAG:
@@ -17,8 +9,9 @@ def QC_to_DAG(qc: QuantumCircuit, apply_opti: bool = True) -> DAG:
     result = DAG(qc.num_qubits)
 
     for e in data:
-        g = get_gate_type(e.operation.name)(
-            [qc.find_bit(q).index for q in e.qubits], e.operation.params
+        g = LogicalGate(
+            LogicalGateKind.from_symbol(e.operation.name.lower()),
+            tuple(qc.find_bit(q).index for q in e.qubits),
         )
         result.add_gate(g)
 
