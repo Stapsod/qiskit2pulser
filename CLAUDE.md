@@ -247,10 +247,27 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 - Décomposition native et optimisation à deux niveaux : description d'issue rédigée, chantier reporté.
 - Estimation de ressources, ses choix : `Backend.resource_estimation() -> dict[str, ResourceEstimationResult]` (`utils/estimation.py`, champs `name`, `value`, `unit`, `description`), déléguée par `Compiler`. Profondeur du DAG reportée à l'issue de décomposition native. Restent : atomes, CZ, impulsions `raman`, durée totale. Ouvert : compter dans `translate` ou relire la `Sequence`.
 - Implémenté par lui : compteurs `cz_count`/`raman_count` incrémentés pendant la traduction (`raman_count` dans `_rotation`, après le cas θ = 0), `int(get_duration())`, gardes avant `build`. Vérifié contre les impulsions réelles de la `Sequence` sur 33 circuits : aucun écart. Son choix : pas de tests pour l’estimation.
+- Suite hésitante : refonte du DAG (décomposition native) ou nouvelle passe. Proposé : d'abord lister sur papier les passes visées et leur niveau (logique/natif), pour en tirer ce que le DAG doit supporter, puis faire la refonte.
+- Catalogue de passes présenté. Logiques : annulation d'inverses, annulation par commutation, réécriture de motifs, portes diagonales retirées en début (état |0…0⟩) et en fin (avant mesure en base Z, contrat « tout mesuré à la fin »). Natives : fusion 1 qubit, R_z poussées vers la fin, resynthèse de blocs à 2 qubits (≤ 3 CZ). Backend : impulsions multi-cibles, ordre pour limiter les reciblages. Relevé : le jeu x, y, z, h, cz est Clifford, donc resynthèse Clifford possible tant qu'il n'y a pas de porte non-Clifford.
+- Question : élargir le jeu de portes ? Relevé : `reduce_unitary_gate` suppose que toute porte est son propre inverse (même `symbol` → suppression), faux pour S, T ou les rotations paramétrées. Avis donné : élargir avec la refonte du DAG (une porte = une règle de décomposition en natif), pas avant. Alternative : `qiskit.transpile(basis_gates=…)` en amont.
+- Textes d'issues rédigés : passes d'optimisation (issue mère, une sous-issue par passe) et élargissement du jeu de portes (après la refonte du DAG). Prochaine séance : refonte du DAG sur papier, en commençant par « qu'est-ce qu'une porte » (une hiérarchie ou deux, paramètres, contrats = portes natives ?).
+
+### 2026-11-15
+- Refonte du DAG, sa proposition de cycle de vie : création → optimisation (`Compiler`) → optimisation (backend, portes logiques) → décomposition en natif (backend) → optimisation (backend, natif). Ouvert : critère entre les deux optimisations du backend.
+- SAT hors sujet pour l'instant ; exigence retenue : reconnaître les CZ dans le DAG natif.
+- Son intuition : des optimisations logiques guidées par le backend. Relevé : souvent une passe générique + un modèle de coût du backend (CZ ≈ 3,7 µs et ≈ 1 % d'erreur, Z virtuelle gratuite sur Pulser), donc l'étape 3 pourrait se fondre dans l'étape 2. Certains motifs (H·CZ·H) se reconnaissent mieux avant la décomposition. Pas tranché.
+- Son choix : deux DAG et deux jeux de portes (logique, natif), pas de type `Gate` commun. La décomposition est une fonction DAG logique → nouveau DAG natif. Ouvert : structure du DAG dupliquée ou générique sur le type de nœud ; passes valables aux deux niveaux (annulation d'inverses) écrites deux fois ou via une interface minimale.
+- Son choix : DAG générique sur le type de porte (syntaxe 3.12 `DAG[G: …]`). Contraintes vues : borne sur un `Protocol` ou liste fermée de types ; seulement statiques (pyright), une garde à l'exécution demande un `isinstance` et une classe ou un jeu de portes passé au constructeur. Enum « à la Java » (jeu de portes → tuple de classes) possible, rôle à préciser.
+- Son choix : portes natives figées par backend (ou famille, ex. atomes neutres), la décomposition devient une fonction de mapping du backend (fin de `Gate.contracts()`). Les contrats `R`/`Rz`/`CZ` deviennent le jeu natif. Relevé : ajouter une porte logique touche chaque backend (inverse de `contracts()`) ; garde statique possible par `match` + `assert_never` sur une union fermée ; mapping en fonction libre partageable sans `ColdAtomsBackend`. Jeu intermédiaire universel : écarté pour l'instant.
+- Variante examinée et écartée : une méthode de décomposition par famille de backend dans chaque porte (ou visiteur). Elle fait dépendre la couche logique des jeux natifs, et ajouter une famille touche chaque porte.
+- Conséquence : la notion de contrat disparaît (`Gate.contracts()` supprimée). `R`, `Rz`, `CZ` restent comme portes natives, à déplacer de `utils/` vers le backend ou la famille atomes neutres. `translate` parcourt le DAG natif.
+- Portes logiques (implémentées par moi à sa demande, `DAG/logical_gate.py`) : enum `LogicalGateKind` (symbol, arity, inverse par nom, is_diagonal) + `@dataclass(frozen=True) LogicalGate(kind, qubits: tuple)`, arité et qubits distincts vérifiés dans `__post_init__`. `symbol` exposé pour le DAG, `from_symbol` pour le convertisseur.
+- `Gate.py` supprimé. La borne du DAG est un `Protocol` `Gate` (`symbol`, `qubits`) dans `DAG.py`. `_gate_types` remplacé par `LogicalGateKind`. Reste cassé : `PulserBackend.translate` appelle `gate.contracts()`, en attente de la décomposition dans le backend.
+- Sa pipeline : `Compiler` : création du DAG logique → optimisation | backend : optimisation (logique) → conversion en natif → optimisation (native) → SAT.
 
 ## Temps passé
 
-**Total : ≈ 40,8 h** (au 2026-11-13).
+**Total : ≈ 42,4 h** (au 2026-11-14).
 
 Méthode initiale : union de deux sources, sans compter deux fois les chevauchements.
 - Commits de toutes les branches : deux commits à moins de 2 h d'écart sont dans la même séance, qui compte du premier au dernier commit, + 1 h avant le premier.
@@ -282,3 +299,4 @@ En fin de séance, j'ajoute une ligne avec la durée de la conversation (même d
 | 2026-11-11 | 0,1 h |
 | 2026-11-12 | 0,5 h |
 | 2026-11-13 | 0,6 h |
+| 2026-11-14 | 1,6 h |
