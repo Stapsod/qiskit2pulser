@@ -3,7 +3,7 @@ from math import pi
 from pulser import BlackmanWaveform, Pulse, Register, Sequence
 from pulser_simulation import QutipEmulator
 
-from qiskit2pulser.backend.backend import Backend
+from qiskit2pulser.backend.utils.backend import Backend
 from qiskit2pulser.DAG.DAG import DAG, Node
 from qiskit2pulser.layout.layout import Layout
 from qiskit2pulser.parameters.layout_parameters import LayoutParameters
