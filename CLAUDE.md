@@ -265,9 +265,23 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 - `Gate.py` supprimé. La borne du DAG est un `Protocol` `Gate` (`symbol`, `qubits`) dans `DAG.py`. `_gate_types` remplacé par `LogicalGateKind`. Reste cassé : `PulserBackend.translate` appelle `gate.contracts()`, en attente de la décomposition dans le backend.
 - Sa pipeline : `Compiler` : création du DAG logique → optimisation | backend : optimisation (logique) → conversion en natif → optimisation (native) → SAT.
 
+### 2026-11-16
+- Analyse des écarts avec le papier KQD (`ETEQ/papier.pdf`, Yoshioka et al. 2024) : circuits H + CX (préparation contrôlée), Trotter d'ordre 2 en exp(−iθ(XX+YY+ZZ)) sur un heavy-hex 3-coloré (3 CZ par arête), mesures X/Y sur l'ancilla et Pauli sur le reste, jusqu'à 56+1 qubits.
+- Ce qui manque : portes paramétrées (`LogicalGate` sans paramètre), CX, RZ/SX/rotations, portes composites (`PauliEvolution`), `barrier` et `measure` (refusés par `from_symbol`), et `translate` en attente de la décomposition native.
+- Constaté : `raman_local` et `rydberg_local` ont `max_targets = 1` et un reciblage de 220 ns, donc tout est sérialisé. Une CZ à Ω = 2 dure ≈ 15 µs (3,74 + 7,48 + 3,74). Avec quelques centaines de CZ, on arrive à quelques ms, et l'erreur s'accumule à ≈ 1 % par CZ.
+- À 57 qubits : SAT jamais testé à cette taille, émulation QuTiP impossible (3 niveaux par atome), donc ni `run` ni les tests e2e ne s'appliquent.
+- Roadmap proposée à sa demande, rien de tranché : décomposition native → portes paramétrées + CX → `barrier`/`measure` → petite instance KQD comparée à Qiskit → instance complète en build seul. Choix ouverts : `transpile` Qiskit en amont ou support des portes composites, sort de `reduce_unitary_gate` avec des angles, taille de la petite instance.
+- Son choix : le circuit KQD (`ETEQ/papier.pdf`, arXiv:2407.14431) sert de test concret pour le compilateur, sans reproduire l'algorithme. Une issue mère et 5 sous-issues : portes paramétrées, CX et rotations, `barrier`/`measure`, petite instance comparée à Qiskit, build seul à 57 qubits. #27 est le prérequis.
+- Arborescence des backends, son choix : `backend/utils/` (`Backend`, `make_backend`) et un dossier par backend (`backend/pulser/` : `pulser_backend.py`, `pulser_native_gates.py`). La base `NativeGates` est dans `backend/utils/native_gates.py`.
+- Portes natives Pulser, son choix : une classe de base `NativeGates` (`qubits`, arité et doublons vérifiés dans `__post_init__`) et des sous-classes dataclass `R`, `Rz`, `CZ` avec leurs paramètres. `symbol` et `arity` passent en `ClassVar` (redéfinir des champs avec une valeur par défaut cassait l'ordre des champs hérités). Relevé : une union fermée `R | Rz | CZ` permet un `match` exhaustif (`assert_never`), une base ouverte non.
+- `CZ` symétrique, son choix : les qubits sont triés dans `CZ.__post_init__` (`object.__setattr__`, après la validation de la base), donc `CZ((1, 0)) == CZ((0, 1))`. Le contrôle choisi par `translate` sera toujours le plus petit indice.
+- `NativeGates` sorti dans `backend/utils/` comme modèle commun aux backends (son choix ; `LogicalGate` garde sa propre validation). Envisagé, non tranché : mettre la traduction Pulser dans les classes de portes. Pour l'instant, la traduction reste dans le backend (seulement ≈ 20 lignes allégées, les portes auraient besoin de l'état et des primitives du backend). Alternative notée : un module de traduction séparé dans `backend/pulser/`.
+- Décomposition logique → natif (`_logical_to_native`) : `match` sur `gate.kind` + `assert_never`, conforme à `pulses.typ`. Traduction natif → impulsions (`_translate_native_gate`) : motifs de tuple (`R((q,), theta, phi)`, `CZ((q0, q1))`) et `TypeError` en dernier cas, son choix. Relevé : un sous-motif de tuple sur `tuple[int, ...]` peut échouer, donc pyright ne réduit pas l'union et `assert_never` est refusé (il passe avec de simples captures).
+- Son objectif : alléger `pulser_backend.py` pour n'y garder que des appels. Blocs relevés selon l'état lu/écrit : placement, registre, décomposition (sans état), traduction en impulsions (séquence, canaux, compteurs), exécution, estimation. Ouvert pour la prochaine séance : le backend garde-t-il l'état du résultat, où vont les compteurs, les étapes intermédiaires (DAG natif, positions) sont-elles visibles de l'extérieur. Restent : `build` n'appelle pas la décomposition ni la traduction, `entries` partagé entre les deux DAG, `Backend` importe encore `Contract` et déclare `translate`.
+
 ## Temps passé
 
-**Total : ≈ 42,4 h** (au 2026-11-14).
+**Total : ≈ 45,5 h** (au 2026-11-16).
 
 Méthode initiale : union de deux sources, sans compter deux fois les chevauchements.
 - Commits de toutes les branches : deux commits à moins de 2 h d'écart sont dans la même séance, qui compte du premier au dernier commit, + 1 h avant le premier.
@@ -300,3 +314,5 @@ En fin de séance, j'ajoute une ligne avec la durée de la conversation (même d
 | 2026-11-12 | 0,5 h |
 | 2026-11-13 | 0,6 h |
 | 2026-11-14 | 1,6 h |
+| 2026-11-15 | 1,4 h |
+| 2026-11-16 | 1,7 h |
