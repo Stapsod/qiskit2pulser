@@ -286,7 +286,7 @@ Projet perso d'apprentissage : un compilateur qui prend un `QuantumCircuit` Qisk
 
 ## Temps passé
 
-**Total : ≈ 45,5 h** (au 2026-11-16).
+**Total : ≈ 46,7 h** (au 2026-11-16).
 
 Méthode initiale : union de deux sources, sans compter deux fois les chevauchements.
 - Commits de toutes les branches : deux commits à moins de 2 h d'écart sont dans la même séance, qui compte du premier au dernier commit, + 1 h avant le premier.
@@ -320,4 +320,4 @@ En fin de séance, j'ajoute une ligne avec la durée de la conversation (même d
 | 2026-11-13 | 0,6 h |
 | 2026-11-14 | 1,6 h |
 | 2026-11-15 | 1,4 h |
-| 2026-11-16 | 1,7 h |
+| 2026-11-16 | 2,9 h |
