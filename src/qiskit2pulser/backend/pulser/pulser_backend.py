@@ -1,11 +1,12 @@
 from pulser import Register, Sequence
 from pulser_simulation import QutipEmulator
 
+from qiskit2pulser.backend.pulser.pulser_native_gates import CZ, R
 from qiskit2pulser.backend.pulser.pulser_register_builder import PulserRegisterBuilder
 from qiskit2pulser.backend.pulser.pulser_sequence_builder import PulserSequenceBuilder
 from qiskit2pulser.backend.pulser.pulser_transpiler import PulserTranspiler
 from qiskit2pulser.backend.utils.backend import Backend
-from qiskit2pulser.DAG.DAG import DAG
+from qiskit2pulser.DAG.DAG import DAG, Node
 from qiskit2pulser.parameters.layout_parameters import LayoutParameters
 from qiskit2pulser.parameters.pulser_parameters import PulserParameters
 from qiskit2pulser.utils.compiler_result import CompilerResult
@@ -16,8 +17,6 @@ class PulserBackend(Backend):
     parameters: PulserParameters
     register: Register
     sequence: Sequence | None = None
-    cz_count: int = 0
-    raman_count: int = 0
 
     def __init__(self, parameters: PulserParameters):
         self.parameters = parameters
@@ -77,6 +76,22 @@ class PulserBackend(Backend):
             raise RuntimeError(
                 "PulserBackend.resource_estimation: The backend must be build before to get the resource estimation"
             )
+
+        # One native gate gives one instruction: count them on the native DAG.
+        # An R with theta = 0 emits no pulse (see PulserSequenceBuilder).
+        cz_count = 0
+        raman_count = 0
+
+        def count(node: Node) -> None:
+            nonlocal cz_count, raman_count
+            match node.gate:
+                case CZ():
+                    cz_count += 1
+                case R(theta=theta) if theta != 0:
+                    raman_count += 1
+
+        self.native_dag.bfs(count)
+
         res = {
             "qubits_count": ResourceEstimationResult(
                 "qubits_count",
@@ -86,13 +101,13 @@ class PulserBackend(Backend):
             ),
             "CZ_count": ResourceEstimationResult(
                 "CZ_count",
-                self.cz_count,
+                cz_count,
                 "nb gates",
                 "Number of CZ gates in the final sequence",
             ),
             "raman_count": ResourceEstimationResult(
                 "raman_count",
-                self.raman_count,
+                raman_count,
                 "nb raman pulse",
                 "Number of Raman pulses in the final sequence",
             ),
