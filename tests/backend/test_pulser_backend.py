@@ -1,6 +1,9 @@
 from qiskit import QuantumCircuit
 
-from qiskit2pulser.backend.backend_factory import make_backend, make_backend_parameters
+from qiskit2pulser.backend.utils.backend_factory import (
+    make_backend,
+    make_backend_parameters,
+)
 from qiskit2pulser.DAG.qiskit_to_dag import QC_to_DAG
 from tests.config import make_config
 

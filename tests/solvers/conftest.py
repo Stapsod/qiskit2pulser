@@ -3,7 +3,7 @@ import random
 import pytest
 from qiskit import QuantumCircuit
 
-from qiskit2pulser.DAG.qiskit_to_dag import _gate_types
+from qiskit2pulser.DAG.logical_gate import LogicalGateKind
 from qiskit2pulser.parameters.layout_parameters import LayoutParameters
 from tests.circuit_generator import generate_circuit_and_dag
 from tests.solvers.solver_checker import SolverChecker
@@ -46,7 +46,7 @@ def random_case(seed: int):
     rng = random.Random(f"solver-{seed}")
     nb_qubits, nb_gates = rng.randint(1, 6), rng.randint(0, 15)
     qc, _ = generate_circuit_and_dag(
-        nb_qubits, nb_gates, list(_gate_types.keys()), seed
+        nb_qubits, nb_gates, [k.symbol for k in LogicalGateKind], seed
     )
     params = rng.choice(RANDOM_LAYOUTS)
     return pytest.param(

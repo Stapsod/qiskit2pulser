@@ -3,13 +3,22 @@ from __future__ import annotations
 from collections import defaultdict, deque
 from dataclasses import dataclass, field
 from itertools import count
+from typing import Protocol
 
-from qiskit2pulser.DAG.Gate import Gate
+
+class Gate(Protocol):
+    """What the DAG needs from a gate, whatever its gate set."""
+
+    @property
+    def symbol(self) -> str: ...
+
+    @property
+    def qubits(self) -> tuple[int, ...]: ...
 
 
 @dataclass(eq=False)
-class Node:
-    gate: Gate
+class Node[G: Gate]:
+    gate: G
     name: str
     successors: dict[int, Node] = field(default_factory=dict, repr=False)
 
@@ -18,11 +27,11 @@ class Node:
 
 
 @dataclass
-class DAG:
+class DAG[G: Gate]:
     num_qubits: int
-    entries: list[Node] = field(default_factory=list)
-    last_gate: list[Node | None] = field(init=False)
-    first_gate: list[Node | None] = field(init=False)
+    entries: list[Node[G]] = field(default_factory=list)
+    last_gate: list[Node[G] | None] = field(init=False)
+    first_gate: list[Node[G] | None] = field(init=False)
     _counters: defaultdict[str, count] = field(
         default_factory=lambda: defaultdict(count), init=False, repr=False
     )
@@ -31,8 +40,8 @@ class DAG:
         self.last_gate = [None] * self.num_qubits
         self.first_gate = [None] * self.num_qubits
 
-    def add_gate(self, gate: Gate) -> None:
-        node = Node(gate, f"{gate.symbol}{next(self._counters[gate.symbol])}")
+    def add_gate(self, gate: G) -> None:
+        node = Node[G](gate, f"{gate.symbol}{next(self._counters[gate.symbol])}")
         has_pred = False
         for q in gate.qubits:
             last = self.last_gate[q]

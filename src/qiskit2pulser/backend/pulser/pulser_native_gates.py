@@ -7,31 +7,40 @@ Qiskit's convention: R(theta, phi) rotates by theta around the axis
 """
 
 from dataclasses import dataclass
+from typing import ClassVar
+
+from qiskit2pulser.backend.utils.native_gates import NativeGates
 
 
 @dataclass(frozen=True)
-class R:
+class R(NativeGates):
     """Rotation by theta around an axis of the equatorial plane."""
 
     theta: float
     phi: float
-    qubit: int
+    symbol: ClassVar[str] = "R"
+    arity: ClassVar[int] = 1
 
 
 @dataclass(frozen=True)
-class Rz:
+class Rz(NativeGates):
     """Rotation by phi around the Z axis."""
 
     phi: float
-    qubit: int
+    symbol: ClassVar[str] = "Rz"
+    arity: ClassVar[int] = 1
 
 
 @dataclass(frozen=True)
-class CZ:
+class CZ(NativeGates):
     """Symmetric: the backend chooses which qubit is the control."""
 
-    a: int
-    b: int
+    symbol: ClassVar[str] = "CZ"
+    arity: ClassVar[int] = 2
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        object.__setattr__(self, "qubits", tuple(sorted(self.qubits)))
 
 
-Contract = R | Rz | CZ
+PulserNativeGates = R | Rz | CZ

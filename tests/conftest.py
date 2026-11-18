@@ -6,7 +6,7 @@ pytest.register_assert_rewrite("tests.solvers.solver_checker")
 
 import random
 
-from qiskit2pulser.DAG.qiskit_to_dag import _gate_types
+from qiskit2pulser.DAG.logical_gate import LogicalGateKind
 from tests.circuit_generator import generate_circuit_and_dag
 from tests.DAG.dag_checker import DAGChecker
 
@@ -37,5 +37,7 @@ def case_id(case: tuple[int, int, int]) -> str:
 def checker(request) -> DAGChecker:
     seed, nb_qubits, nb_gates = request.param
     return DAGChecker(
-        *generate_circuit_and_dag(nb_qubits, nb_gates, list(_gate_types.keys()), seed)
+        *generate_circuit_and_dag(
+            nb_qubits, nb_gates, [k.symbol for k in LogicalGateKind], seed
+        )
     )

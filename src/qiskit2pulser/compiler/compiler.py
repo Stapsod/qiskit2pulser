@@ -1,7 +1,10 @@
 import subprocess
 import tempfile
 
-from qiskit2pulser.backend.backend_factory import make_backend, make_backend_parameters
+from qiskit2pulser.backend.utils.backend_factory import (
+    make_backend,
+    make_backend_parameters,
+)
 from qiskit2pulser.DAG.qiskit_to_dag import QC_to_DAG
 from qiskit2pulser.parameters.compiler_parameters import CompilerParameters
 from qiskit2pulser.utils.compiler_result import CompilerResult

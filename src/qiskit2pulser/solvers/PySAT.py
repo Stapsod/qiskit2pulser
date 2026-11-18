@@ -30,7 +30,8 @@ class PySAT(Solver):
         self.cz_tuples = set()
 
         def use_node(node: Node):
-            if node.gate.symbol == "cz":
+            # Logical DAG: "cz", Pulser native DAG: "CZ"
+            if node.gate.symbol.lower() == "cz":
                 q1, q2 = node.gate.qubits[0], node.gate.qubits[1]
                 t = (q1, q2) if q1 < q2 else (q2, q1)
                 self.cz_tuples.add(t)

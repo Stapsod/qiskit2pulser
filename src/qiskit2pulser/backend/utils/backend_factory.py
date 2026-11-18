@@ -1,7 +1,7 @@
 from typing import Any
 
-from qiskit2pulser.backend.backend import Backend
-from qiskit2pulser.backend.pulser_backend import PulserBackend
+from qiskit2pulser.backend.pulser.pulser_backend import PulserBackend
+from qiskit2pulser.backend.utils.backend import Backend
 from qiskit2pulser.parameters.backend_parameters import BackendParameters
 from qiskit2pulser.parameters.pulser_parameters import PulserParameters
 

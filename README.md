@@ -19,16 +19,17 @@ uv sync
 ## Pipeline
 
 ```
-QuantumCircuit ─► DAG ─► optimisation ─► [backend Pulser : placement des atomes (SAT) ─► Sequence] ─► émulation
+QuantumCircuit ─► DAG logique ─► optimisation ─► [backend Pulser : DAG natif ─► placement des atomes (SAT) ─► Sequence] ─► émulation
 ```
 
-`Compiler` ne connaît que les étapes génériques (DAG, optimisation) : le placement est propre aux atomes neutres et se fait dans `PulserBackend.build`.
+`Compiler` ne connaît que les étapes génériques (DAG logique, optimisation). Le jeu de portes natif, le placement et les impulsions sont propres aux atomes neutres : `PulserBackend.build` ne fait qu'enchaîner trois classes de `backend/pulser/` (`PulserTranspiler`, `PulserRegisterBuilder`, `PulserSequenceBuilder`).
 
-1. **DAG** : une porte par nœud, un successeur par qubit. Portes supportées : `x`, `y`, `z`, `h`, `cz`.
+1. **DAG logique** : une porte par nœud, un successeur par qubit. Le DAG est générique sur le type de porte (protocole `Gate` : `symbol`, `qubits`). Portes logiques supportées : `x`, `y`, `z`, `h`, `cz`.
 2. **Optimisation** : suppression des paires de portes à 1 qubit identiques et adjacentes sur un même fil (`X X`, `H H`…), y compris en cascade (`X Y Y X` → rien). Activée par `apply_opti` dans `[compiler]`.
-3. **Placement** : les atomes sont placés sur une grille dans le disque du device (`DigitalAnalogDevice`). Contraintes : distance minimale entre atomes, et les deux atomes de chaque CZ à portée l'un de l'autre. Le solveur est PySAT (CaDiCaL).
-4. **Backend Pulser** : chaque porte se décompose en opérations natives (R(θ, φ), R_z, CZ), traduites en impulsions Blackman (`raman_local` pour les portes à 1 qubit, `rydberg_local` pour la CZ).
-5. **Exécution** : émulation QuTiP sur N shots. Le résultat (`CompilerResult`) donne les comptages, avec les bitstrings dans l'ordre de Qiskit (q0 à droite).
+3. **DAG natif** (`PulserTranspiler`) : chaque porte logique est décomposée en portes natives Pulser, R(θ, φ), R_z(φ) et CZ, dans un nouveau DAG.
+4. **Placement** (`PulserRegisterBuilder`) : les atomes sont placés sur une grille dans le disque du device (`DigitalAnalogDevice`). Contraintes : distance minimale entre atomes, et les deux atomes de chaque CZ à portée l'un de l'autre. Les paires de CZ sont lues dans le DAG natif. Le solveur est PySAT (CaDiCaL).
+5. **Impulsions** (`PulserSequenceBuilder`) : chaque porte native est traduite en impulsions Blackman (`raman_local` pour R, `rydberg_local` pour la CZ) ; R_z est un `phase_shift` virtuel.
+6. **Exécution** : émulation QuTiP sur N shots. Le résultat (`CompilerResult`) donne les comptages, avec les bitstrings dans l'ordre de Qiskit (q0 à droite).
 
 ## Utilisation
 
@@ -77,6 +78,8 @@ Chaque estimation porte un nom, une valeur, une unité et une description. Chaqu
 | `CZ_count` | portes | nombre de CZ (3 impulsions `rydberg_local` chacune) |
 | `raman_count` | impulsions | nombre d'impulsions `raman_local` (les R_z, virtuelles, ne comptent pas) |
 | `duration` | ns | durée totale de la `Sequence` |
+
+Les nombres de CZ et d'impulsions raman sont comptés sur le DAG natif (une porte native donne une instruction).
 
 ## Configuration
 
@@ -129,12 +132,14 @@ just all               # tous les documents
 ├── src/qiskit2pulser/
 │   ├── __init__.py      # main et circuit de démo
 │   ├── compiler/        # Compiler : enchaîne les étapes
-│   ├── DAG/             # DAG, portes, conversion Qiskit → DAG, optimisation
+│   ├── DAG/             # DAG générique, portes logiques, conversion Qiskit → DAG, optimisation
 │   ├── layout/          # grille de placement et géométrie
 │   ├── solvers/         # placement SAT (classe Solver + PySAT, factory)
-│   ├── backend/         # classe Backend + PulserBackend, factory
+│   ├── backend/
+│   │   ├── utils/       # classe Backend, factory, base NativeGates des portes natives
+│   │   └── pulser/      # PulserBackend, portes natives, transpiler, register et sequence builders
 │   ├── parameters/      # paramètres (compiler, layout, solver, backend, pulser)
-│   └── utils/           # contrats (opérations natives), CompilerResult, estimations
+│   └── utils/           # CompilerResult, estimations
 ├── formalisations/      # notes Typst
 └── tests/
     ├── testsuite.py     # point d'entrée de `uv run testsuite`
@@ -149,6 +154,7 @@ just all               # tous les documents
 - [x] Conversion d'un circuit Qiskit en DAG (portes `x`, `y`, `z`, `h`, `cz`), avec export DOT et affichage via Graphviz
 - [x] Placement des atomes par SAT
 - [x] Conversion des portes en impulsions
+- [x] DAG à deux niveaux : portes logiques, puis portes natives propres au backend
 - [x] Tests fonctionnels de bout en bout contre Qiskit
 - [x] Première passe d'optimisation : suppression des portes à 1 qubit identiques adjacentes
 - [x] Estimation de ressources (atomes, CZ, impulsions, durée)
